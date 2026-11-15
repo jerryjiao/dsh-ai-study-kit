@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="dsh-ai-study-kit logo — an open book with a learning spark" width="160">
+</p>
+
 # dsh-ai-study-kit
 
 **AI 学习教练 for DeepSeek Harness** — 把 [`ai-study-kit`](#来源与致谢) 的五个学习教练 skill 打包成 DSH 插件，并随包携带完整答题站快照 `kit/`。

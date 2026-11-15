@@ -132,3 +132,9 @@ DSH 的宿主插件没有「命令即 markdown」的机制，只有 **skill 注�
 - 已清除上游示例里出现的个人服务器用户名（见第 4 节（b））。
 - 不含任何密钥、令牌、`.env` 真实值或私有服务地址。
 - `LICENSE` 版权方写为 `dsh-ai-study-kit contributors`，非个人。
+
+## 8. Logo
+
+- 源文件 [assets/logo.svg](../assets/logo.svg)：512×512 矢量，圆角深海蓝底 + 打开的白色书 + 青绿学习火花 + 底部成长弧线；不依赖任何字体或外链。
+- 导出 `assets/logo.png`（512×512，透明圆角外缘）用于 README；`icon.png`（256×256）为其缩放版，作为 DSH 插件图标与条目 icon。
+- 渲染方式可复现：用无头 Chrome 以 `--window-size=512,512 --default-background-color=00000000` 截取 SVG，再用 `sips -z 256 256` 生成 icon。

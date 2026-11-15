@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="dsh-ai-study-kit: an open book with a spark">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16233d"/>
+      <stop offset="0.55" stop-color="#0f1a2e"/>
+      <stop offset="1" stop-color="#0a1120"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.30"/>
+      <stop offset="0.6" stop-color="#34d399" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="spark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6ee7b7"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dbe4f0"/>
+    </linearGradient>
+    <linearGradient id="shelf" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.50"/>
+      <stop offset="0.5" stop-color="#34d399" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0.50"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="1.5" y="1.5" width="509" height="509" rx="110.5" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="3"/>
+  <circle cx="356" cy="172" r="168" fill="url(#glow)"/>
+
+  <!-- open book -->
+  <path d="M256 340 C224 322 182 310 152 310 C145 310 140 315 140 322 L140 376 C140 383 145 387 152 386 C190 383 226 392 256 404 Z" fill="url(#page)"/>
+  <path d="M256 340 C288 322 330 310 360 310 C367 310 372 315 372 322 L372 376 C372 383 367 387 360 386 C322 383 286 392 256 404 Z" fill="url(#page)" fill-opacity="0.92"/>
+  <path d="M256 340 L256 404" stroke="#0f1a2e" stroke-opacity="0.22" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- text lines -->
+  <g stroke="#64748b" stroke-opacity="0.55" stroke-width="9" stroke-linecap="round">
+    <path d="M164 336 C190 336 220 342 240 350"/>
+    <path d="M164 358 C190 358 220 364 240 372"/>
+    <path d="M348 336 C322 336 292 342 272 350"/>
+    <path d="M348 358 C322 358 292 364 272 372"/>
+  </g>
+
+  <!-- learning spark -->
+  <path d="M356 116 C363 154 375 167 412 175 C375 183 363 196 356 234 C349 196 337 183 300 175 C337 167 349 154 356 116 Z" fill="url(#spark)"/>
+  <path d="M291 128 C294 143 299 148 314 151 C299 154 294 159 291 174 C288 159 283 154 268 151 C283 148 288 143 291 128 Z" fill="#6ee7b7" fill-opacity="0.75"/>
+  <circle cx="412" cy="232" r="7" fill="#22d3ee"/>
+
+  <!-- growth shelf -->
+  <path d="M148 432 C208 456 304 456 364 432" stroke="url(#shelf)" stroke-width="9" stroke-linecap="round" fill="none"/>
+</svg>

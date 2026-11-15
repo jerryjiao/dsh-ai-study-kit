@@ -18,6 +18,7 @@
     "references",
     "locale/*.json",
     "cordis.patch.yml",
+    "assets",
     "icon.png",
     "CHANGELOG.md",
     "README.md",
