@@ -1,0 +1,330 @@
+/**
+ * ja.ts — 日本語 UI 文案。
+ * zh の key セットに型で固定（Record<TKey, string>）：key が 1 つでも欠けるとコンパイルエラーになります。
+ */
+import type { TKey } from './zh';
+
+export const ja: Record<TKey, string> = {
+  // グローバル
+  'app.title': 'AI Study Kit · 学習トレーニング',
+  'app.loading': '進捗を読み込み中…',
+
+  // トップナビ
+  'nav.home': 'ホーム',
+  'nav.flashcards': 'フラッシュカード',
+  'nav.courses': 'コース',
+  'nav.panorama': 'パノラマ',
+  'nav.backHome': 'ホームに戻る',
+
+  // ホーム
+  'home.tagline': '学習トレーニング · 全{total}問 · 進捗は端末間で自動同期',
+  // ローカルモード（バックエンドなし、公式サイトのデモなど）の tagline：sync.local のバナーと同じ口径で、同期を謳わない
+  'home.taglineLocal': '学習トレーニング · 全{total}問 · 進捗はこのブラウザに保存されます',
+  'home.heroTitle': '続けよう、今日もレベルをクリア',
+  'home.statAnswered': '回答済み',
+  'home.statAccuracy': '正答率',
+  'home.statWrong': '不正解',
+  'home.statRead': '既読',
+  'home.resumeCta': '続きから',
+  'home.wrongRetry': '間違えた問題を再練習（{n}）',
+  'home.random20': 'ランダム {n} 問',
+  'home.byTopic': 'テーマ別でレベルアップ',
+  'home.nowTag': '学習中',
+  'home.qUnit': '問',
+  'home.extTag': '応用 {n}',
+  'home.uncategorized': '（未分類）',
+
+  // ホーム・学習計画パネル（アクティブなテーマに plan.json があるときのみ表示。判定は src/lib/plan.ts、
+  // scripts/lib/plan.mjs と同期。デグレード時の文案（日付なし・ペース不足・接触なし）も五語対応）
+  'home.planTitle': '学習計画',
+  'home.planDone': '完了 {done}/{total}',
+  'home.planDeadlineIn': '締め切りまで {n} 日',
+  'home.planDeadlineToday': '締め切りは今日です',
+  'home.planDeadlineOver': '締め切りから {n} 日過ぎました',
+  'home.planPace': 'ペース',
+  'home.planRescheduled': '組み直し済み：次は「{unit}」（{date}）',
+  'home.planSlack': '{n} 日の余裕',
+  'home.planDueToday': '次のユニットは今日が期限',
+  'home.planCleared': '予定分はすべて完了',
+  'home.planNoCalendar': '計画に日付がなく、ペース比較はできません',
+  'home.planProjection': '直近 {window} 日のペースでは {date} 頃に完了予定',
+  'home.planProjSlack': '締め切りまで {n} 日の余裕',
+  'home.planProjDeficit': '締め切りまで {n} 日の不足',
+  'home.planProjNoData': '直近 {window} 日に完了なし。ペースデータ不足のため予測しません',
+  'home.planProjComplete': 'すべてのユニットが完了',
+  'home.planGap': '前回の学習から {n} 日',
+  'home.planNoContact': 'まだ学習記録がありません',
+  // 今日の学習バッジ（#123 マイクロブロック）：4 チャネル（解答/カード/コース/口頭）の
+  // いずれかに今日の接触があれば点灯——3 問のマイクロブロック 1 回でもカウントします
+  'home.todayTouched': '今日もう学習済み',
+  // ブランク明けの帰還カード（#120, spec #118 T1）：ウォームアップ + 組み直し可能な提案
+  // （#125：実行可能な組み直しへ昇格——実行はコーチ側ジェネレーター、web は道筋を示す
+  // だけ。確認後に書き戻す = 学習者が拒否できる）
+  'home.welcomeBack': 'おかえりなさい',
+  'home.warmupCta': 'ウォームアップ：{name}',
+  'home.warmupCtaPlain': '1 問ウォームアップ',
+  'home.warmupHintSchedule': 'スケジュールに遅れた論点——1 問で手感を取り戻します',
+  'home.warmupHintWeak': 'いちばん弱い論点——1 問で手感を取り戻します',
+  'home.warmupHintNext': '次のステーション——1 問で手感を取り戻します',
+  'home.shiftAdviceDeadline': '実測ペース（直近 {window} 日で約 {pace} 日/ユニット）では、残り {n} ユニットに約 {days} 日かかります——組み直せます：次回コーチとのセッションで確認し、スケジュールを {shift} 日後ろにずらせます',
+  'home.shiftAdviceNoDeadline': '実測ペース（直近 {window} 日で約 {pace} 日/ユニット）では、残り {n} ユニットに約 {days} 日かかります——組み直せます：次回コーチとのセッションで確認し、スケジュールを {shift} 日後ろにずらせます',
+  'home.planRemaining': '残り {n} ユニット',
+  'home.planStatusInProgress': '学習中',
+  'home.planStatusPaused': '保留',
+
+  // 出題ポイントパノラマの独立ページ（v0.25：全体構成バー + 大分類ごとのキャンディノード
+  // 経路 + ノード詳細の軌跡パネル。判定は src/lib/panorama.ts と mastery と同じ口径）
+  'panorama.title': 'パノラマ',
+  'panorama.taught': '講義',
+  'panorama.practiced': '演習',
+  'panorama.mastered': '習得',
+  'panorama.answered': '解答 {answered}/{total}',
+  'panorama.oral': '口頭 {correct}/{asked}',
+  'panorama.stale': '「講義済み」シグナルは前回ビルド時点です。解答と口頭の結果はリアルタイムです（リアルタイムの口頭データがないポイントは前回ビルドに戻ります）。',
+  'panorama.graphHint': 'つながりはナレッジグラフの投影によるものです。実線の矢印＝前提（先に学ぶべき項目）、破線＝関連、ノード＝習得の 4 状態を表します。',
+  'panorama.stateMastered': '習得済み',
+  'panorama.stateInProgress': '学習中',
+  'panorama.stateWeak': '苦手',
+  'panorama.stateUntouched': '未着手',
+  'panorama.totalPoints': '全 {n} ポイント',
+  'panorama.knowflowLabel': '前提関係のつながり',
+  'panorama.byTopic': '大分類ごとにポイントを見る',
+  'panorama.byTopicHint': '1 ノード = 1 ポイント · ノードをタップで軌跡と問題へ',
+  'panorama.topicMasteredPrefix': '習得済み',
+  'panorama.topicEpUnit': 'ポイント',
+  'panorama.noEp': '現在の問題バンクには出題ポイントタグ（examPoint）がないため、習得度を算出できません。',
+  'panorama.filterAll': 'すべて',
+  'panorama.filterWeak': '苦手のみ',
+  'panorama.filterUnmastered': '未習得のみ',
+  'panorama.filterAria': '出題ポイントの絞り込み',
+  'panorama.sheetClose': '閉じる',
+  'panorama.sheetPractice': 'このポイントの問題を解く',
+  'panorama.sheetCourse': 'コースを見る',
+  'panorama.statWrongTimes': '誤答 {n} 回',
+  'panorama.statFlash': 'フラッシュカード {graduated}/{mapped} 卒業',
+  'panorama.timelineTitle': '学習軌跡',
+  'panorama.timelineEmpty': 'まだ学習の痕跡がありません——下のボタンから始めましょう',
+  'panorama.tlToday': '今日',
+  'panorama.tlFirst': '初めて触れた',
+  'panorama.tlCorrect': '正解',
+  'panorama.tlWrong': '誤答',
+  'panorama.tlWrongRun': '{n} 連続誤答',
+  'panorama.tlOralCorrect': '口頭回答 正解',
+  'panorama.tlOralWrong': '口頭回答 誤答',
+  'panorama.tlFlash': 'カード卒業',
+  'panorama.tlMastered': 'ポイント習得',
+  'panorama.tlMasteredSub': '全問正解 + 未卒業の誤答なし',
+
+  // パノラマの計画サマリー行（#93 維持；plan.json を持つテーマのみ描画。計画 day チップは
+  // このページから外しました——spec #110 Q3。完全な計画パネルはホームにあります。判定は
+  // src/lib/plan.ts。ペース表現は home.plan* のキーを再利用）
+  'panorama.planDone': '計画：{done}/{total} 完了',
+
+  // パノラマ·次の一駅カード（v0.25 チケット 6、spec #110「A · 上部おすすめカード」）：
+  // 主推薦の理由（弱点補強と足を引っ張る下流/前提 解放済み/遅れ——遅れはテーマに
+  // 目標日がある場合のみ）+ 代替リンク + 緑ボタンで問題セットへ直行
+  'panorama.nextLabel': '次の一駅',
+  'panorama.nextGoWeak': 'この課を補強する',
+  'panorama.nextGo': 'この課を学ぶ',
+  'panorama.nextWhyWeak': '未卒業の誤答が {n} 問',
+  'panorama.nextWhyWeakBlocks': '未卒業の誤答が {n} 問あり、下流の {m} 個のポイント（{names}）を滞らせています',
+  'panorama.nextWhyUnlocked': '前提はすべて解放済み。学習経路上の次の一駅',
+  'panorama.nextWhySchedule': '学習計画表を順に進めた次のポイント',
+  'panorama.nextWhyBehind': '計画より {n} 日遅れています（目標日 {date}）',
+  'panorama.nextAltWeakPref': '補強したくない？構造順で進む →',
+  'panorama.nextAltWeakPrefSched': '補強したくない？計画表順で進む →',
+  'panorama.nextAltGenPref': '別の優先度 →',
+  'panorama.nextAltAfter': 'その次 →',
+  'panorama.nextAltUnlocked': '{name} · 前提クリア',
+  'panorama.nextAltNext': '{name} · 計画表の次',
+  'panorama.nextAltWeak': '{name} · 苦手',
+
+  // パノラマ·ペース引用行（チケット 6：テーマに目標日がある場合のみ描画、クリックで
+  // ホームの完全な計画パネルへ移動——目標日がなければこの行は存在しません（ゼロ催促
+  // 原則）。ペースデータが足りない場合は目標日へのカウントダウンへ正直に格下げ）
+  'panorama.paceProj': '現在のペースでは {date} 完了見込み',
+  'panorama.paceProjSlack': '目標より {n} 日の余裕',
+  'panorama.paceProjDeficit': '目標まであと {n} 日不足',
+  'panorama.paceDeadlineIn': '目標日まであと {n} 日',
+  'panorama.paceDeadlineToday': '目標日は今日です',
+  'panorama.paceDeadlineOver': '目標日を {n} 日過ぎました',
+  'panorama.paceAria': 'ホームの完全な学習計画を開く',
+
+  // 練習ページ
+  'practice.readMode': '通読モード',
+  'practice.layerAll': 'すべて',
+  'practice.redoSet': 'このセットをやり直す',
+  'practice.redoSetTitle': 'このセットの回答記録を消去してもう一度解きます',
+  'practice.jumpUnanswered': '未回答へ移動',
+  'practice.jumpUnansweredTitle': 'このセットの最初の未回答問題へ移動します',
+  'practice.rereadSet': 'このセットを再通読',
+  'practice.rereadSetTitle': 'このセットの通読進捗を消去してもう一度読みます',
+  'practice.viewPractice': '解答',
+  'practice.viewRead': '通読',
+  'practice.mastered': '習得済み {n}',
+  'practice.readCount': '既読 {n}',
+  'practice.answeredCount': '回答済み {n}',
+  'practice.noWrong': '間違えた問題はまだありません。問題を解いてみましょう！',
+  'practice.noQuestionsScope': '「{name}」には問題がありません。',
+  'practice.noQuestions': '問題がありません。',
+  'practice.backHome': 'ホームに戻る',
+  'practice.prev': '前の問題',
+  'practice.next': '次の問題',
+  'practice.finish': '解答を終える',
+  'practice.backToFirst': '最初の問題に戻る',
+  'practice.nextSet': '次のセット：{label}',
+  'practice.stayHere': 'ここに留まる（閉じる）',
+  'practice.keepReading': '通読を続ける（閉じる）',
+  'practice.labelWrong': '間違えた問題',
+  'practice.labelSequential': '全問練習',
+  'practice.labelQuoted': '「{name}」',
+  'practice.confirmRedo': '{label}の回答記録をリセットしますか？（{n} 問。正誤と間違いの進捗も含まれ、元に戻せません。他のトピックとフラッシュカードには影響しません。）',
+  'practice.confirmReread': '{label}を再通読しますか？（{n} 問。このセットの通読進捗を消去し、元に戻せません。他のトピックと回答記録には影響しません。）',
+  'practice.summaryAria': '解答まとめ',
+
+  // 問題カード
+  'q.multi': '複数選択',
+  'q.judge': '正誤判定',
+  'q.single': '単一選択',
+  'q.difficulty': '難易度 {level}',
+  'q.index': '第 {n} 問',
+  'q.imageAlt': '問題の画像',
+  'q.submitSelfEval': '提出（自己採点）',
+  'q.submit': '回答を提出',
+  'q.correct': '正解です',
+  'q.wrong': '不正解です。正しい答え：{answer}',
+  'q.wrongCountHistory': '· これまでに {n} 回間違い',
+  'q.wrongCountTotal': '· 累計 {n} 回間違い',
+  'q.streakProgress': '連続正解 {streak}/{needed}。あと {left} 回正解すると自動的に間違えた問題から外れます',
+  'q.streakLabel': '間違えた問題の連続正解進捗',
+  'q.mastered': '習得済みのため、間違えた問題から外しました',
+  'q.dismiss': '外す',
+  'q.dismissTitle': 'この問題を間違えた問題から手動で外します（以降は繰り返し表示されません）',
+  'q.confirmDismiss': 'この問題を間違えた問題から外しますか？',
+  'q.selfEvalNote': '自己採点問題（正式な模範解答なし）',
+  'q.analysis': '解説：',
+  'opt.correctAnswer': '正しい答え',
+  'opt.wrongAnswer': '誤った選択',
+
+  // 確認ダイアログ
+  'confirm.cancel': 'キャンセル',
+  'confirm.ok': 'OK',
+  'confirm.aria': '操作の確認',
+
+  // SRS 評価
+  'srs.again': 'もう一度',
+  'srs.hard': '難しい',
+  'srs.good': 'まあまあ',
+  'srs.easy': '簡単',
+  'srs.aria': '評価',
+
+  // 解答まとめ
+  'summary.tierGood': 'よく習得できています',
+  'summary.tierOk': '引き続き定着を',
+  'summary.tierLow': 'もう数周しましょう',
+  'summary.title': '解答完了 · {title}',
+  'summary.answered': '回答済み',
+  'summary.correctCount': '正解',
+  'summary.wrongCount': '不正解',
+  'summary.selfRated': '自己採点問題 {n} 問を含みます（正答率には数えません）',
+  'summary.totalNote': '全 {n} 問 · このトピックの累計正答率',
+  'summary.nextHook': '次回：{name} 口頭で 3 問 · 約 {minutes} 分',
+  'summary.backHome': 'ホームに戻る',
+  'summary.redo': 'このセットをやり直す',
+
+  // フラッシュカード復習フロー
+  'fc.extraDone': '追加練習完了！',
+  'fc.extraDoneNote': '今回さらに {n} 枚こなしました。評価は記録済みです',
+  'fc.back': 'フラッシュカードに戻る',
+  'fc.todayDone': '今日の復習完了！',
+  'fc.todayDoneNote': '今日は {n} 枚復習しました',
+  'fc.streak': '{n} 日連続継続中',
+  'fc.nextDue': '次のカードは約 {interval} 後に期限を迎えます',
+  'fc.learningLaterToday': '学習中のカードがもう {n} 枚、今日の遅い時間に期限を迎えます。そのときに続きをどうぞ',
+  'fc.extraRound': 'もう一周練習（追加復習。連続日数は更新されません）',
+  'fc.new': '新規',
+  'fc.learning': '学習中',
+  'fc.review': '復習待ち',
+  'fc.includesRelearn': '· 再学習 {n} 枚を含む',
+  'fc.extraTag': '· 追加練習',
+  'fc.phaseNew': '新規',
+  'fc.phaseLearning': '学習ステップ {cur}/{total}·{step}分',
+  'fc.phaseRelearning': '再学習·{step}分',
+  'fc.phaseReview': '復習',
+  'fc.hintFlip': 'カードをクリック、またはスペースキーでめくります',
+  'fc.hintRate': '下の評価を選んでください（または 1-4 キー）',
+  'fc.showAnswer': '答えを表示',
+
+  // フラッシュカード dashboard
+  'fch.title': 'フラッシュカード復習',
+  'fch.tagline': '間隔反復 · 科学的な忘却対策 · 全 {n} 枚',
+  'fch.todayDone': '今日の復習は完了です',
+  'fch.start': '今日の復習を開始',
+  'fch.count': '（{n} 枚）',
+  'fch.nothingToday': '今日復習すべきカードはありません',
+  'fch.rerunAll': '全 {n} 枚をもう一度練習',
+  'fch.rerunNote': '追加練習 · 連続日数は更新されません · 評価は記録されます',
+  'fch.newPerDay': '1 日の新規カード数',
+  'fch.save': '保存',
+  'fch.cancel': 'キャンセル',
+
+  // コースページ
+  'courses.notReady': 'コースは未準備です',
+  'courses.notReadyHint':
+    'コースの内容は examples/<theme>/ から取り込まれます。先に pnpm run build（sync:study を含む）を実行して public/study/ へ同期してください。',
+  'courses.frameTitle': '学習コース',
+  'courses.index': 'コース目次',
+  'courses.tocCount': ' · {done}/{total}',
+  'courses.doneProgress': '完了したレッスン {done}/{total}',
+  'courses.markDone': '✓ 学習完了',
+  'courses.undoDone': '学習完了 · 元に戻す',
+  'courses.undoDoneTitle': 'このレッスンの完了マークを取り消します（コースを開くだけでは完了に数えられず、このボタンのみがカウントされます）',
+  'courses.goPractice': 'このレッスンの問題を解く',
+
+  // 同期バナー
+  'sync.local': 'オンラインデモモード：進捗はこのブラウザにのみ保存され、サーバーとは同期されません',
+  'sync.remoteInvalid': 'サーバー上の進捗データの形式が古いため、このスナップショットを無視しました——当面はこのブラウザの進捗に従います。次回の保存時に自動的に修復されます',
+  'sync.retrying': '同期を再試行しています…',
+  'sync.error': '進捗の同期に失敗しました。ローカルに保存済みです。クリックで再試行',
+  'sync.retry': '再試行',
+  'sync.close': '閉じる',
+
+  // テーマ切り替え
+  'theme.light': 'ライトモード',
+  'theme.dark': 'ダークモード',
+  'theme.system': 'システムに従う',
+  'theme.title': '現在：{label}（クリックで切り替え）',
+  'theme.aria': 'テーマを切り替え。現在：{label}',
+
+  // 設定パネル（学習設定：応用演習・正解時に自動で次へ・1 日の新規カード上限）
+  'settings.title': '学習設定',
+  'settings.close': '閉じる',
+  'settings.extLabel': '応用演習',
+  'settings.extDesc': 'デフォルトはオフ。オンにすると応用層（章末問題）を表示します：練習ページに層の絞り込みが、ホームに応用問題ブロックが現れ、苦手な出題ポイントの補強に使えます',
+  'settings.autoLabel': '正解時に自動で次へ',
+  'settings.autoDesc': 'デフォルトはオン。正解後 3 秒で次の問題へ自動進行します。オフにするとその場に留まり、解説が読みやすくなります',
+  'settings.quotaLabel': '1 日の新規カード上限',
+  'settings.quotaDesc': 'フラッシュカードで 1 日に投入する新規カードの上限（0-50）。フラッシュカードページの設定と同期します',
+  'settings.quotaMinus': '上限を減らす',
+  'settings.quotaPlus': '上限を増やす',
+  'settings.syncHint': '設定は進捗とともに端末間で同期されます',
+
+  // 設定パネル・データリセット（v0.25 チケット 2：旧ホームの「進捗管理」にあった
+  // 4 つのリセット操作をここに集約。いずれも現在のテーマにのみ作用します）
+  'settings.resetTitle': 'データリセット（現在のテーマのみ）',
+  'settings.resetPos': 'リスト位置をリセット',
+  'settings.confirmResetPos': 'すべての練習リスト（日別・トピック別）の位置を第 1 問に戻しますか？（回答記録には影響しません）',
+  'settings.resetWrong': '間違い記録を消去',
+  'settings.confirmResetWrong': '現在のテーマの間違い記録を消去しますか？（間違えた問題の再練習が空になり、元に戻せません）',
+  'settings.resetRead': '通読進捗を消去',
+  'settings.confirmResetRead': '現在のテーマの通読進捗を消去しますか？（回答記録には影響しません。元に戻せません）',
+  'settings.resetSrs': 'フラッシュカードを消去',
+  'settings.confirmResetSrs': '現在のテーマのフラッシュカード進捗を消去しますか？すべてのカードが新規カードに戻り、連続日数もゼロになります。元に戻せません。（解答・通読の進捗には影響しません）',
+  'settings.resetAllTheme': 'このテーマの全進捗を消去（フラッシュカード含む）',
+  'settings.confirmResetAllTheme':
+    '現在のテーマの全進捗（回答 ＋ 間違い ＋ 通読 ＋ フラッシュカード）を消去しますか？この操作は元に戻せず、すべての端末に同期されます。他のテーマには影響しません。',
+
+  // 言語切り替え
+  'lang.aria': '言語を切り替え',
+  'lang.title': '言語',
+};

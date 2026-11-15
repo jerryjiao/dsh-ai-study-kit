@@ -1,0 +1,266 @@
+// panorama.ts — 考点全景图（web 侧聚合，scripts/lib/panorama.mjs 的 TS 移植）。
+//
+// ⚠️ 口径与 scripts/lib/panorama.mjs 必须保持同步（mastery-report / skill 探测用那边的
+// 版本，web /panorama 独立页用这边）——沿 mastery.ts/mastery.mjs 双实现先例，改判据两边一起改。
+//
+// 三信号（v0.13）：
+//   taught 讲过    来自 build 时产出的内容无关覆盖快照（src/data/coverage.json——study/records
+//                  学习者私有不上站，只有 ep id/布尔/计数能出门）∪ courseTaughtAll（课全读）
+//   practiced 练过 本地进度实时派生：该考点有答题记录，或口头计数 > 0（弱信号）
+//   mastered 掌握  掌握度四态判据（masteryByExamPoint v1.2：题主证 + 口述达标/闪卡毕业任一
+//                  超题证据）——口述四态 #122（v0.26）起优先取 progress.oralAttempts 实时
+//                  现算（教练陪练作答 POST /api/oral-attempts 回流，刷新页面即生效），
+//                  无实时流水的考点回退快照 oralStatus（build 时现算）
+// 「讲过」新鲜度 = 上次 build；答题与口述实时（口述实时通道 + 快照回退）。分组：theme.json examDays。
+import type { AnswerRecord, Flashcard, OralAttempt, Question, SrsState } from '../types';
+import { masteryByExamPoint, type ExamPointMastery, type MasteryStatus } from './mastery';
+import { groupOralByEp, oralMastery } from './oral';
+
+export interface OralCount { asked: number; correct: number }
+
+/** 考点间连线（build 时快照 graph.edges：EP id 对 + 前置布尔——派生布尔面，无叙述）。 */
+export interface PanoramaGraphEdge { from: string; to: string; prerequisite: boolean }
+
+/** 可读阈值：超限（或无数据）→ 全景回退现有分组清单，绝不硬渲染连线。 */
+export const GRAPH_MAX_EDGES = 200;
+export const GRAPH_MAX_POINTS = 80;
+
+/** 覆盖快照单点（sync-examples 产 src/data/coverage.json；内容无关——无个人叙述）。 */
+export interface CoveragePoint {
+  ep: string;
+  taught: boolean;
+  practiced: boolean;
+  mastered: boolean;
+  oral: OralCount | null;
+  /** 口头四态（v1.2 掌握判据的超题证据输入；四值枚举，内容无关）。null/缺省 = 无口述数据。 */
+  oralStatus?: MasteryStatus | null;
+}
+
+export interface CoverageSnapshot {
+  theme: string;
+  generatedAt: string;
+  courseTaughtAll: boolean;
+  points: CoveragePoint[];
+  graph?: { edges: PanoramaGraphEdge[] } | null;
+}
+
+/** 连线渲染判据（纯函数）：有边且不超阈值才画；无图/超限回退清单（v0.14 回退语义）。 */
+export function shouldRenderGraph(
+  pointCount: number,
+  edges: PanoramaGraphEdge[] | null | undefined,
+): boolean {
+  return !!edges && edges.length > 0
+    && edges.length <= GRAPH_MAX_EDGES
+    && pointCount <= GRAPH_MAX_POINTS;
+}
+
+export interface PanoramaPoint {
+  ep: string;
+  name: string;
+  taught: boolean;
+  practiced: boolean;
+  mastered: boolean;
+  status: MasteryStatus;
+  answered: number;
+  total: number;
+  openWrong: number;
+  oral: OralCount | null;
+  /** 口头四态（v1.2 判据输入）：#122 起实时流水现算优先，快照 oralStatus 回退；null = 无口述数据。 */
+  oralStatus: MasteryStatus | null;
+}
+
+export interface PanoramaGroup {
+  day: string;
+  points: PanoramaPoint[];
+  summary: { total: number; taught: number; practiced: number; mastered: number };
+}
+
+export const UNSCHEDULED_DAY = '未排程';
+
+/**
+ * 全景聚合（与 scripts/lib/panorama.mjs buildPanorama 同口径；records/coursesRead 输入
+ * 在 web 侧替换为 build 时快照——判据等价：taught = 快照 taught ∪ courseTaughtAll）。
+ * @param oralAttempts 口述实时流水（progress.oralAttempts 经 oralAttemptsForTheme 过滤后
+ *                     传入，#122）：考点命中即四态/计数现算优先，无流水的考点回退快照。
+ */
+export function buildPanorama(
+  questions: Question[],
+  answers: Record<string, AnswerRecord>,
+  epNames: Record<string, string> = {},
+  flashcards: Flashcard[] = [],
+  srs: Record<string, SrsState> = {},
+  coverage: CoverageSnapshot | null = null,
+  epDays: Record<string, string> = {},
+  oralAttempts: OralAttempt[] = [],
+): { summary: { examPoints: number; taught: number; practiced: number; mastered: number }; courseTaughtAll: boolean; groups: PanoramaGroup[] } {
+  const covByEp = new Map<string, CoveragePoint>();
+  for (const p of coverage?.points ?? []) covByEp.set(p.ep, p);
+  // 口述四态 → 掌握判据（v1.2 超题证据主通道）。#122 实时回流：实时流水按 EP 分组现算
+  // （教练 POST 回流，刷新即生效）；无实时流水的考点回退快照 oralStatus（无 API 离线场景
+  // 优雅回退，旧路径不破坏）。逐考点独立回退——实时流可只覆盖部分考点。
+  const liveByEp = new Map<string, { status: MasteryStatus; asked: number; correct: number }>();
+  for (const [ep, attempts] of groupOralByEp(oralAttempts, epNames)) {
+    const m = oralMastery(attempts);
+    liveByEp.set(ep, { status: m.status, asked: m.asked, correct: m.correct });
+  }
+  const oralByEp: Record<string, MasteryStatus> = {};
+  for (const [ep, live] of liveByEp) oralByEp[ep] = live.status;
+  for (const [ep, cov] of covByEp) {
+    if (!liveByEp.has(ep) && cov.oralStatus) oralByEp[ep] = cov.oralStatus;
+  }
+  const { points } = masteryByExamPoint(questions, answers, epNames, flashcards, srs, oralByEp);
+  const courseTaughtAll = coverage?.courseTaughtAll === true;
+
+  const dayOrder: string[] = [];
+  for (const p of points) {
+    const day = epDays[p.ep];
+    if (day && !dayOrder.includes(day)) dayOrder.push(day);
+  }
+  dayOrder.sort((a, b) => a.localeCompare(b, 'zh-Hans-CN', { numeric: true }));
+
+  const groupMap = new Map<string, PanoramaPoint[]>();
+  for (const p of points) {
+    const day = epDays[p.ep] || UNSCHEDULED_DAY;
+    if (!groupMap.has(day)) groupMap.set(day, []);
+    const cov = covByEp.get(p.ep);
+    // 口头计数同款实时优先：实时流水的 asked/correct 现算，无流水考点回退快照 oral
+    const live = liveByEp.get(p.ep);
+    const oral: OralCount | null = live
+      ? { asked: live.asked, correct: live.correct }
+      : (cov?.oral ?? null);
+    groupMap.get(day)!.push({
+      ep: p.ep,
+      name: p.name,
+      taught: (cov?.taught ?? false) || courseTaughtAll,
+      practiced: p.answered > 0 || (oral?.asked ?? 0) > 0,
+      mastered: p.status === 'mastered',
+      status: p.status,
+      answered: p.answered,
+      total: p.total,
+      openWrong: p.openWrongIds.length,
+      oral,
+      oralStatus: p.oralStatus,
+    });
+  }
+
+  const groupKeys = [...groupMap.keys()].sort((a, b) => {
+    if (a === UNSCHEDULED_DAY) return 1;
+    if (b === UNSCHEDULED_DAY) return -1;
+    const ia = dayOrder.indexOf(a), ib = dayOrder.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+
+  const groups: PanoramaGroup[] = groupKeys.map((day) => {
+    const pts = groupMap.get(day)!;
+    return {
+      day,
+      points: pts,
+      summary: {
+        total: pts.length,
+        taught: pts.filter((x) => x.taught).length,
+        practiced: pts.filter((x) => x.practiced).length,
+        mastered: pts.filter((x) => x.mastered).length,
+      },
+    };
+  });
+
+  const all = groups.flatMap((g) => g.points);
+  return {
+    summary: {
+      examPoints: all.length,
+      taught: all.filter((x) => x.taught).length,
+      practiced: all.filter((x) => x.practiced).length,
+      mastered: all.filter((x) => x.mastered).length,
+    },
+    courseTaughtAll,
+    groups,
+  };
+}
+
+/** 全景筛选三档（#80 chips + ?filter= 深链）：全部 / 弱项 / 未掌握。 */
+export type PanoramaFilter = 'all' | 'weak' | 'unmastered';
+
+/** URL 参数解析：合法枚举放行，非法/缺失回退「全部」（深链容错，不抛错）。 */
+export function parsePanoramaFilter(raw: string | null | undefined): PanoramaFilter {
+  return raw === 'weak' || raw === 'unmastered' ? raw : 'all';
+}
+
+/**
+ * 单点是否命中筛选档（v0.25 票⑤：筛选从「隐藏整组」改为「非命中节点压暗」——地图语义
+ * 保留空间上下文，构成条与节点路径都不再收缩）。弱项 = status === 'weak'；
+ * 未掌握 = status !== 'mastered'；档位判据与旧 filterPanoramaGroups 逐点同口径。
+ */
+export function pointMatchesFilter(p: PanoramaPoint, filter: PanoramaFilter): boolean {
+  if (filter === 'all') return true;
+  return filter === 'weak' ? p.status === 'weak' : p.status !== 'mastered';
+}
+
+// —— v0.25 票⑤（spec #110 Q3）版式派生：构成条四态计数 + 按大类（topic）分组 ——
+
+/** 四态计数（构成条分段与图例的数字源；status 来自 masteryByExamPoint，判据同口径）。 */
+export interface StatusCounts { mastered: number; inProgress: number; weak: number; untouched: number }
+
+export function countStatuses(points: PanoramaPoint[]): StatusCounts {
+  const c: StatusCounts = { mastered: 0, inProgress: 0, weak: 0, untouched: 0 };
+  for (const p of points) c[p.status] += 1;
+  return c;
+}
+
+/** 大类分组（每大类一张全宽卡）：topic 取该考点下任一题的 topic（考点不跨大类时唯一；
+ *  跨了取首题并注释在实现里）。大类顺序与首页网格一致（topicOrder 序 + 未列出按字母序），
+ *  组内考点按 EP 编号数字序（EP-2 < EP-10），无数字后缀的 id 字典序兜底。 */
+export interface TopicSection {
+  topic: string;              // 题库 topic id（'' = 题库未标 topic）
+  points: PanoramaPoint[];
+  counts: StatusCounts;
+}
+
+/** EP id 排序键：EP-NN 按数字，其余按字典序（数字段优先，非数字统一排在数字段后）。 */
+function epSortKey(ep: string): [number, number | string] {
+  const m = ep.match(/(\d+)$/);
+  return m ? [0, Number(m[1])] : [1, ep];
+}
+
+/** EP id 比较序（导出给下一站推荐的排布表序共用）：EP-2 < EP-10；无数字后缀按字典序垫后。 */
+export function compareEp(a: string, b: string): number {
+  const ka = epSortKey(a), kb = epSortKey(b);
+  return ka[0] !== kb[0] ? ka[0] - kb[0]
+    : typeof ka[1] === 'number' && typeof kb[1] === 'number' ? ka[1] - kb[1]
+    : String(ka[1]).localeCompare(String(kb[1]));
+}
+
+export function groupByTopic(
+  questions: Question[],
+  points: PanoramaPoint[],
+  order: readonly string[] = [],
+): TopicSection[] {
+  // EP → topic：取该考点首题的 topic（考点按 examPoint 聚合，题库惯例同考点同大类）
+  const epTopic = new Map<string, string>();
+  for (const q of questions) {
+    if (!q.examPoint || epTopic.has(q.examPoint)) continue;
+    epTopic.set(q.examPoint, q.topic || '');
+  }
+  const byTopic = new Map<string, PanoramaPoint[]>();
+  for (const p of points) {
+    const topic = epTopic.get(p.ep) ?? '';
+    const list = byTopic.get(topic) ?? [];
+    list.push(p);
+    byTopic.set(topic, list);
+  }
+  const keys = [...byTopic.keys()].sort((a, b) => {
+    const ia = order.indexOf(a), ib = order.indexOf(b);
+    if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    return a.localeCompare(b);
+  });
+  return keys.map((topic) => {
+    const pts = byTopic.get(topic)!.sort((a, b) => compareEp(a.ep, b.ep));
+    return { topic, points: pts, counts: countStatuses(pts) };
+  });
+}
+
+/** 排布表顺序的考点序（v0.25 票⑥）：groups（day 数字序）拍平 + 组内 EP 数字序。
+ *  下一站推荐（lib/nextStation）的结构轨兜底序与落后日程映射都吃这个序——
+ *  「回退排布表顺序」的「排布表」就是 MISSION day 列（theme.json examDays）。 */
+export function flattenScheduleOrder(groups: PanoramaGroup[]): PanoramaPoint[] {
+  return groups.flatMap((g) => [...g.points].sort((a, b) => compareEp(a.ep, b.ep)));
+}

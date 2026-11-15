@@ -1,0 +1,189 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Layers, Flame, Settings, CircleCheck, ChevronRight, RefreshCw } from 'lucide-react';
+import { flashcards } from '../data/flashcards';
+import { useProgress } from '../hooks/useProgress';
+import { isDue, isLearningDueAhead, isLearningPhase, formatInterval } from '../lib/srs';
+import { newCardsToday, isCardDeleted } from '../lib/progress';
+import { lsGet, STREAK_KEY } from './Flashcards';
+import { CountBadge } from '../components/CountBadge';
+import { Button3D } from '../components/ui';
+import { useI18n } from '../i18n';
+
+const DAY_MS = 86_400_000;
+const NEW_PER_DAY_KEY = 'ask-new-per-day';
+const DEFAULT_NEW_PER_DAY = 5;
+
+/** 闪卡 dashboard：今日概览 + 开始复习入口 + 每日新卡设置（对应答题页的 Home）。
+ *  「重置本主题闪卡进度」危险入口已收口到设置弹层「数据重置」节（v0.25 票③，
+ *  原型 proto-flashcards-home 注记③——与 Q1 重置收口一致，本页不再单独放）。 */
+export function FlashcardsHome() {
+  const { progress, updateSettings } = useProgress();
+  const { t } = useI18n();
+  const srs = progress.srs ?? {};
+  const now = Date.now();
+
+  const appliedNewPerDay = (typeof progress.settings?.dailyNewCards === 'number' && Number.isFinite(progress.settings.dailyNewCards) && progress.settings.dailyNewCards >= 0 && progress.settings.dailyNewCards <= 50)
+    ? Math.floor(progress.settings.dailyNewCards)
+    : (parseInt(lsGet(NEW_PER_DAY_KEY, String(DEFAULT_NEW_PER_DAY)), 10) || DEFAULT_NEW_PER_DAY);
+  const [showSettings, setShowSettings] = useState(false);
+  const [newPerDayInput, setNewPerDayInput] = useState(String(appliedNewPerDay));
+  const [, forceRerender] = useState(0); // 设置保存后触发重算
+
+  /** 三色计数 + 今日总数。判定标准与复习页（Flashcards.tsx）完全一致：
+ *  - 无 srs 记录 → 新卡（按每日配额截断）
+ *  - 学习步阶段（learning/relearning）且到期（带 20m 提前窗口）→ 学习中
+ *  - review 阶段且到期（严格 due<=now）→ 待复习
+   *  历史用 interval===0&&reps===0 判"学习中"是错的——学习步卡 interval=10min/24/60≈0.0069（非0），
+   *  会被误分类。改为用 phase 判定，两页一致。 */
+  const counts = useMemo(() => {
+    let reviewLeft = 0,
+      learningLeft = 0,
+      freshLeft = 0;
+    for (const c of flashcards) {
+      const st = srs[c.id];
+      if (!st || isCardDeleted(st)) {
+        freshLeft++;
+        continue;
+      }
+      if (isLearningPhase(st)) {
+        if (isLearningDueAhead(st, now)) learningLeft++;
+      } else if (isDue(st, now)) {
+        reviewLeft++;
+      }
+    }
+    return { review: reviewLeft, learning: learningLeft, fresh: Math.min(freshLeft, Math.max(0, appliedNewPerDay - newCardsToday(progress, now))) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [srs, appliedNewPerDay, now, progress]);
+
+  const totalToday = counts.review + counts.learning + counts.fresh;
+  const streak = parseInt(lsGet(STREAK_KEY, '0'), 10) || 0;
+
+  // 下一张到期卡（给用户预期）。多主题隔离：只看激活主题的卡（flashcards 为激活主题数据），
+  // 其他主题的 srs 记录不混入——否则 hint 显示的是别的主题的到期时间。
+  const nextDue = useMemo(() => {
+    const ids = new Set(flashcards.map((c) => c.id));
+    const future = Object.entries(srs)
+      .filter(([id, s]) => ids.has(id) && !s.deletedAt)
+      .map(([, s]) => s.due)
+      .filter((d) => d > now)
+      .sort((a, b) => a - b)[0];
+    return future ? formatInterval((future - now) / DAY_MS) : null;
+  }, [srs, now]);
+
+  const saveNewPerDay = () => {
+    const n = Math.max(0, Math.min(50, parseInt(newPerDayInput, 10) || 0));
+    // 双写：settings（跨设备同步，顶栏设置面板同源）+ localStorage（旧读路径兜底）
+    updateSettings({ dailyNewCards: n });
+    try {
+      localStorage.setItem(NEW_PER_DAY_KEY, String(n));
+    } catch {
+      /* 配额 */
+    }
+    setShowSettings(false);
+    forceRerender((x) => x + 1);
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-7">
+      <header className="text-center">
+        <h1 className="flex items-center justify-center gap-2 text-3xl font-bold text-text-primary tracking-tight">
+          <Layers className="h-7 w-7 text-st-green" strokeWidth={2} />
+          {t('fch.title')}
+        </h1>
+        <p className="text-text-muted text-sm mt-2">{t('fch.tagline', { n: flashcards.length })}</p>
+      </header>
+
+      {/* 今日概览：三色计数瓦片（原型 .counts/.count——蓝新/红学习中/绿待复习） */}
+      {totalToday > 0 ? (
+        <div className="flex gap-3">
+          <CountBadge label={t('fc.new')} value={counts.fresh} color="blue" />
+          <CountBadge label={t('fc.learning')} value={counts.learning} color="red" />
+          <CountBadge label={t('fc.review')} value={counts.review} color="green" />
+        </div>
+      ) : (
+        <div className="text-center py-10 space-y-3">
+          <CircleCheck className="mx-auto h-14 w-14 text-st-green" strokeWidth={1.5} />
+          <p className="text-text-secondary font-medium">{t('fch.todayDone')}</p>
+          {nextDue && <p className="text-text-faint text-sm">{t('fc.nextDue', { interval: nextDue })}</p>}
+        </div>
+      )}
+
+      {/* 连续天数（原型 .streak：金色火焰） */}
+      <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-st-gold-ink">
+        <Flame className="h-4 w-4 text-st-gold-ink" strokeWidth={2} />
+        {t('fc.streak', { n: streak })}
+      </p>
+
+      {/* 开始复习入口 + 始终可用的"再练全部" */}
+      <div className="space-y-3">
+        {totalToday > 0 ? (
+          <Link
+            to="/flashcards/review"
+            className="btn3d group flex items-center justify-between text-white rounded-2xl px-5 py-4 font-medium text-lg transition-transform bg-st-green shadow-btn-green"
+          >
+            <span className="flex items-center gap-3">
+              <Layers className="h-5 w-5 opacity-90" strokeWidth={2} />
+              {t('fch.start')}
+              <span className="text-white/80 text-sm">{t('fch.count', { n: totalToday })}</span>
+            </span>
+            <ChevronRight className="h-5 w-5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        ) : (
+          <div className="flex items-center justify-center text-text-faint rounded-2xl px-5 py-4 font-medium text-lg bg-bg-subtle">
+            {t('fch.nothingToday')}
+          </div>
+        )}
+
+        {/* 额外练习：任何时候都能再过一遍全部卡（违背 SRS 排程，但满足"还想看"） */}
+        <Link
+          to="/flashcards/review?extra=1"
+          className="group flex items-center justify-between text-text-secondary hover:text-st-blue-ink border-2 border-border hover:border-st-blue/50 rounded-2xl px-5 py-3.5 font-medium transition-colors"
+        >
+          <span className="flex items-center gap-3">
+            <RefreshCw className="h-5 w-5 opacity-70" strokeWidth={2} />
+            <span className="text-base">{t('fch.rerunAll', { n: flashcards.length })}</span>
+            <span className="text-text-faint text-xs">{t('fch.rerunNote')}</span>
+          </span>
+          <ChevronRight className="h-5 w-5 opacity-50 group-hover:translate-x-0.5 transition-transform" />
+        </Link>
+      </div>
+
+      {/* 设置：每日新卡数 */}
+      {showSettings ? (
+        <div className="bg-bg-subtle border border-border rounded-xl p-4 space-y-3 animate-fade-in">
+          <label className="block text-sm font-medium text-text-primary">{t('fch.newPerDay')}</label>
+          <input
+            type="number"
+            min={0}
+            max={50}
+            value={newPerDayInput}
+            onChange={(e) => setNewPerDayInput(e.target.value)}
+            className="w-full px-3 py-2.5 border-2 border-border-strong rounded-lg text-center text-lg font-medium focus:outline-none focus:border-st-blue transition-colors"
+          />
+          <div className="flex gap-2">
+            <Button3D onClick={saveNewPerDay} className="flex-1">
+              {t('fch.save')}
+            </Button3D>
+            <button
+              onClick={() => setShowSettings(false)}
+              className="flex-1 border-2 border-border-strong text-text-secondary py-2.5 rounded-xl font-medium hover:bg-bg-hover transition-colors"
+            >
+              {t('fch.cancel')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="inline-flex items-center gap-1.5 text-sm text-text-faint hover:text-st-green-ink transition-colors"
+          >
+            <Settings className="h-4 w-4" strokeWidth={2} />
+            {t('fch.newPerDay')}：<span className="font-medium text-text-secondary tabular-nums">{appliedNewPerDay}</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

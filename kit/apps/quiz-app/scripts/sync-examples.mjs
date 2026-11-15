@@ -1,0 +1,181 @@
+#!/usr/bin/env node
+/**
+ * sync-examples.mjs — 把 examples/<theme>/ 的题库和闪卡 JSON 复制到 src/data/，
+ * 供 quiz-app 运行时 import。
+ *
+ * 设计原因：
+ * - examples/<theme>/ 是「单一事实来源」（用户编辑示例主题的地方）
+ * - src/data/*.json 是 quiz-app 运行时 import 的路径（约定）
+ * - 这个脚本在 dev/build 前跑一次，桥接两者。
+ *
+ * 切换主题：改 EXAMPLE_THEME 常量，或抽出成环境变量。
+ */
+import { copyFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, resolve, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { resolveThemeDir, detectStickyTheme, writeThemeState, clearThemeState } from './lib/theme-path.mjs';
+import { epNameMap, epDayMap } from './lib/mastery.mjs';
+import { buildPanorama } from './lib/panorama.mjs';
+import { buildCoverageSnapshot, readSessionRecords, lessonsReadState } from './lib/coverage.mjs';
+import { readOralAttempts, oralAttemptsFromProgress, mergeOralAttempts } from './lib/oral.mjs';
+import { loadGraphMap, loadKnowledgeGraph, projectEdgesToEps } from './lib/graph-bridge.mjs';
+import { syncPlan } from './lib/plan.mjs';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(__dirname, '../../..');  // apps/quiz-app/scripts → repo root
+const DATA_DIR = resolve(__dirname, '../src/data');
+
+// 解析主题目录：粘滞主题口径在 lib/theme-path.mjs 的 detectStickyTheme
+// （EXAMPLE_THEME > .theme-state.json/theme.json 粘滞 > dev-intro；损坏打 warn 不静默换主题）。
+const THEME_RAW = detectStickyTheme(DATA_DIR, REPO_ROOT);
+const { dir: EXAMPLE_DIR, name: EXAMPLE_THEME, external: EXTERNAL } = resolveThemeDir(THEME_RAW, REPO_ROOT);
+
+if (!existsSync(EXAMPLE_DIR)) {
+  console.error(`[sync-examples] example theme not found: ${EXAMPLE_DIR}`);
+  process.exit(1);
+}
+
+mkdirSync(DATA_DIR, { recursive: true });
+
+const FILES = [
+  ['questions.json', 'questions.json'],
+  ['flashcards.json', 'flashcards.json'],
+];
+
+for (const [src, dst] of FILES) {
+  const srcPath = join(EXAMPLE_DIR, src);
+  const dstPath = join(DATA_DIR, dst);
+  if (!existsSync(srcPath)) {
+    console.error(`[sync-examples] source missing: ${srcPath}`);
+    process.exit(1);
+  }
+  copyFileSync(srcPath, dstPath);
+  console.log(`[sync-examples] ${src} → src/data/${dst}  (theme: ${EXAMPLE_THEME})`);
+}
+
+// 主题显示配置（可选文件）：examples/<theme>/theme-config.json → src/data/theme-config.json。
+// 未提供时写空对象 {}——应用按「无配置回退」运行（原始 topic id / 无子主题 / 无层 / 全部计划内 / 默认样式），
+// 保证 import 恒可解析。字段语义见 docs/theming.md。
+const themeConfigSrc = join(EXAMPLE_DIR, 'theme-config.json');
+if (existsSync(themeConfigSrc)) {
+  copyFileSync(themeConfigSrc, join(DATA_DIR, 'theme-config.json'));
+  console.log(`[sync-examples] theme-config.json → src/data/theme-config.json  (theme: ${EXAMPLE_THEME})`);
+} else {
+  writeFileSync(join(DATA_DIR, 'theme-config.json'), '{}\n');
+  console.log(`[sync-examples] theme-config.json 不存在 → 写空配置（无配置回退行为）  (theme: ${EXAMPLE_THEME})`);
+}
+
+// 学习计划（可选文件，ADR-0009）：examples/<theme>/plan.json → src/data/plan.json。
+// 有则原样拷贝；无/损坏/畸形写空计划回退（{units:[]}，theme-config 的 {} 回退同风格，
+// import 恒可解析）——无计划主题（如 dev-intro）全链路现状零变化。
+// 计划数据住主题、派生与展示住 kit：本步只落数据，覆盖/节奏派生与 UI 是后续刀。
+// 外部主题包路径经 EXAMPLE_DIR 同一生效（lib/plan.mjs 只收主题目录绝对路径）。
+const planState = syncPlan(EXAMPLE_DIR, DATA_DIR);
+console.log(`[sync-examples] plan.json → src/data/plan.json  (${planState.present ? `计划 ${planState.units} 单元` : '无计划 → 空计划回退'})  (theme: ${EXAMPLE_THEME})`);
+
+// 记录激活主题：Courses 页据此拼课程 URL（study/<theme>/），保证内容与课程永远同主题，
+// 也让「切换主题」只需改 EXAMPLE_THEME 一处（原需同步手改 Courses.tsx 的 COURSE_URL）。
+// ⭐ 外部主题包的粘滞指针住 apps/quiz-app/.theme-state.json（src/ 之外）——theme.json 被
+// 前端 import 会打进公开 bundle，带构建机绝对路径会泄露路径且跨机器构建哈希漂移（#109）。
+// 仓库内主题名（显式 EXAMPLE_THEME 或粘滞解析结果）时清掉指针：显式切回 dev-intro 后，
+// 下次默认构建不得再粘回外部主题。旧项目 theme.json 残留 dir 被 detectStickyTheme 兼容读
+// 到 → 本次即外部形态，随写 .theme-state.json 完成迁移（ADR-0006 存量承诺：不报错不丢主题）。
+// examPoints（可选）：MISSION.md 排布表解析出的考点名映射（EP-NN → 考点名）；
+// examDays（可选）：EP-NN → day 学程块映射——首页考点全景面板按它分组。
+// 两者都由排布表解析（UI 不重复解析 markdown）。无 MISSION/无排布表 = 空映射。
+const missionPath = join(EXAMPLE_DIR, 'MISSION.md');
+const missionText = existsSync(missionPath) ? readFileSync(missionPath, 'utf-8') : '';
+const examPoints = epNameMap(missionText);
+const examDays = epDayMap(missionText);
+const themeMeta = { theme: EXAMPLE_THEME, examPoints, examDays };
+delete themeMeta.dir;  // 显式剔除 dir（#109）：只住 .theme-state.json，防上游再漏进公开 bundle
+writeFileSync(
+  join(DATA_DIR, 'theme.json'),
+  JSON.stringify(themeMeta, null, 2) + '\n'
+);
+if (EXTERNAL) {
+  writeThemeState(DATA_DIR, EXAMPLE_DIR);
+  console.log(`[sync-examples] → .theme-state.json  (外部主题包粘滞指针，theme.json 不带 dir)`);
+} else {
+  clearThemeState(DATA_DIR);
+}
+console.log(`[sync-examples] → src/data/theme.json  (theme: ${EXAMPLE_THEME}${EXTERNAL ? ' · 外部主题包' : ''}${Object.keys(examPoints).length ? ` · 考点 ${Object.keys(examPoints).length} 个` : ''})`);
+
+// 课程清单：examples/<theme>/lessons/*.html → src/data/courses.json。
+// Courses 页据此渲染课程目录 + 学完进度；ai-study-kit skill / CLI 据此对账「课全学完」
+// 完成边界（coursesRead 的 "<theme>/<file>" key 命中清单全集 = 课全学完）。
+// title 取 lesson 的 <title>（teach 产出必有），取不到时退回文件名。
+// topic（可选）：theme-config.json 的 lessonTopics（"<lesson文件名>" → 题库 topic id）命中时带入——
+// 课程页「已学完 → 去刷这课的题」按它直达对应题集；未配置则缺省，课程页按文件名同名约定回退。
+const lessonTopics = (() => {
+  try {
+    return existsSync(themeConfigSrc) ? (JSON.parse(readFileSync(themeConfigSrc, 'utf-8')).lessonTopics ?? {}) : {};
+  } catch { return {}; } // theme-config 损坏：无映射，等同未配置
+})();
+const lessonsDir = join(EXAMPLE_DIR, 'lessons');
+if (existsSync(lessonsDir)) {
+  const lessons = readdirSync(lessonsDir)
+    .filter((f) => f.endsWith('.html'))
+    .sort()
+    .map((file) => {
+      const html = readFileSync(join(lessonsDir, file), 'utf-8');
+      const m = html.match(/<title>([^<]*)<\/title>/i);
+      const title = (m?.[1] ?? file).trim();
+      return lessonTopics[file] ? { file, title, topic: lessonTopics[file] } : { file, title };
+    });
+  writeFileSync(join(DATA_DIR, 'courses.json'), JSON.stringify({ theme: EXAMPLE_THEME, lessons }, null, 2) + '\n');
+  console.log(`[sync-examples] → src/data/courses.json  (${lessons.length} lessons)`);
+} else {
+  writeFileSync(join(DATA_DIR, 'courses.json'), JSON.stringify({ theme: EXAMPLE_THEME, lessons: [] }, null, 2) + '\n');
+  console.warn(`[sync-examples] lessons 目录不存在：${lessonsDir}（courses.json 置空清单）`);
+}
+
+// 考点覆盖快照（v0.13）：study/records（学习者私有）+ 课已学完 + 答题进度 → 内容无关的
+// 三信号快照（只含 ep id / 布尔 / 计数，无任何个人叙述——隐私边界有内容断言测试盯住），
+// web 首页「考点全景」面板的「讲过/口头」信号通道。面板新鲜度 = 本次 build 时点；
+// 聊天层（mastery-report --panorama）永远现算最新，两端口径一致。
+// 无 records / 无 progress（如 CI）= 信号全 false，不是故障。
+// 口述双源并流（#122，v0.26）：主题包流水 ∪ progress.oralAttempts（教练 POST /api/oral-attempts
+// 回流的实时副本）——只经 API 回流的口述证据在下次 build 后仍保留在快照里（实时通道为主、
+// 快照保底回退）；快照仍只收派生枚举/计数，原始明细不出本地。
+const questionsForCoverage = JSON.parse(readFileSync(join(EXAMPLE_DIR, 'questions.json'), 'utf-8'));
+const flashForCoverage = existsSync(join(EXAMPLE_DIR, 'flashcards.json'))
+  ? JSON.parse(readFileSync(join(EXAMPLE_DIR, 'flashcards.json'), 'utf-8'))
+  : [];
+const progressPath = resolve(__dirname, '..', 'progress.json');
+let progressForCoverage = null;
+if (existsSync(progressPath)) {
+  try { progressForCoverage = JSON.parse(readFileSync(progressPath, 'utf-8')); } catch { progressForCoverage = null; }
+}
+// 考点连线（v0.14，可选）：knowflow 图（位置同 mastery-report：KNOWFLOW_GRAPH_JSON）
+// + 考点节点映射 → EP 级边进覆盖快照（仍只含 EP id + 前置布尔，个人叙述不出本地）。
+// 无图 / 无映射 / 超阈值 = null，快照不带 graph 键，web 回退现有分组清单（静默降级）。
+const graphEpsEdges = (() => {
+  const graphPath = process.env.KNOWFLOW_GRAPH_JSON || null;
+  if (!graphPath) return null;
+  const graph = loadKnowledgeGraph(graphPath);
+  const graphMap = loadGraphMap(EXAMPLE_DIR);
+  const edges = graph && graphMap ? projectEdgesToEps(graph, graphMap) : null;
+  if (edges) console.log(`[sync-examples] 考点连线：${edges.length} 条（来自 ${graphPath}）`);
+  return edges;
+})();
+const coverage = buildCoverageSnapshot(buildPanorama({
+  questions: questionsForCoverage,
+  answers: (progressForCoverage && progressForCoverage.answers) || {},
+  srs: (progressForCoverage && progressForCoverage.srs) || {},
+  flashcards: flashForCoverage,
+  epNames: examPoints,
+  epDays: examDays,
+  records: readSessionRecords(EXAMPLE_DIR),
+  // 口述双源并流（#122）：主题包流水 ∪ progress.oralAttempts（同笔作答四元组去重）
+  oralAttempts: mergeOralAttempts(
+    readOralAttempts(EXAMPLE_DIR),
+    oralAttemptsFromProgress(progressForCoverage, EXAMPLE_THEME)
+  ),
+  coursesRead: lessonsReadState(EXAMPLE_DIR, EXAMPLE_THEME, progressForCoverage),
+}), graphEpsEdges);
+writeFileSync(
+  join(DATA_DIR, 'coverage.json'),
+  JSON.stringify({ theme: EXAMPLE_THEME, ...coverage }, null, 2) + '\n'
+);
+console.log(`[sync-examples] → src/data/coverage.json  (考点覆盖快照：${coverage.points.length} 点 · 讲 ${coverage.points.filter((p) => p.taught).length} · 课程通道 ${coverage.courseTaughtAll ? 'on' : 'off'})`);

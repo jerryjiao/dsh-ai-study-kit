@@ -1,0 +1,336 @@
+/**
+ * es.ts — cadenas de UI en español.
+ * El tipo ancla el conjunto de claves del zh (Record<TKey, string>): falta una clave y el compilador falla.
+ */
+import type { TKey } from './zh';
+
+export const es: Record<TKey, string> = {
+  // Global
+  'app.title': 'AI Study Kit · Práctica',
+  'app.loading': 'Cargando progreso…',
+
+  // Navegación superior
+  'nav.home': 'Inicio',
+  'nav.flashcards': 'Tarjetas',
+  'nav.courses': 'Cursos',
+  'nav.panorama': 'Panorama',
+  'nav.backHome': 'Volver al inicio',
+
+  // Inicio
+  'home.tagline': 'Sitio de práctica · {total} preguntas · el progreso se sincroniza entre dispositivos',
+  'home.taglineLocal': 'Sitio de práctica · {total} preguntas · el progreso se guarda en este navegador',
+  'home.heroTitle': 'Sigue así: hoy también subes de nivel',
+  'home.statAnswered': 'Respondidas',
+  'home.statAccuracy': 'Precisión',
+  'home.statWrong': 'Erróneas',
+  'home.statRead': 'Leídas',
+  'home.resumeCta': 'Continuar',
+  'home.wrongRetry': 'Repetir erróneas ({n})',
+  'home.random20': '{n} al azar',
+  'home.byTopic': 'Sube de nivel por temas',
+  'home.nowTag': 'En curso',
+  'home.qUnit': 'preguntas',
+  'home.extTag': 'Ampliación {n}',
+  'home.uncategorized': '(Sin clasificar)',
+
+  // Inicio · panel del plan de estudio (solo se muestra si el tema activo tiene plan.json; criterios en src/lib/plan.ts,
+  // sincronizados con scripts/lib/plan.mjs. Los textos de degradación (sin fechas / ritmo insuficiente / sin contacto) también están traducidos)
+  'home.planTitle': 'Plan de estudio',
+  'home.planDone': 'Completadas {done}/{total}',
+  'home.planDeadlineIn': 'Quedan {n} días para la fecha límite',
+  'home.planDeadlineToday': 'La fecha límite es hoy',
+  'home.planDeadlineOver': 'La fecha límite pasó hace {n} días',
+  'home.planPace': 'Ritmo',
+  'home.planRescheduled': 'Reprogramado: próxima unidad «{unit}», {date}',
+  'home.planSlack': '{n} días de margen',
+  'home.planDueToday': 'La próxima unidad vence hoy',
+  'home.planCleared': 'Unidades programadas completadas',
+  'home.planNoCalendar': 'El plan no tiene fechas programadas; el ritmo no es comparable',
+  'home.planProjection': 'Al ritmo de los últimos {window} días, terminaría hacia {date}',
+  'home.planProjSlack': '{n} días de margen respecto a la fecha límite',
+  'home.planProjDeficit': '{n} días de déficit respecto a la fecha límite',
+  'home.planProjNoData': 'Sin unidades completadas en los últimos {window} días; ritmo insuficiente, sin proyección',
+  'home.planProjComplete': 'Todas las unidades completadas',
+  'home.planGap': 'Hace {n} días del último contacto de estudio',
+  'home.planNoContact': 'Aún sin contacto de estudio',
+  // Insignia de contacto de hoy (#123 microbloque): se enciende si hoy hay contacto en cualquiera
+  // de los cuatro canales (respuestas/tarjetas/cursos/oral) — incluso un microbloque de 3 preguntas cuenta
+  'home.todayTouched': 'Hoy ya estudiaste',
+  // Tarjeta de bienvenida tras una pausa (#120, spec #118 T1): calentamiento + consejo
+  // de reprogramación (#125: elevado a reprogramación ejecutable — la ejecuta el generador del
+  // coach, la web solo señala el camino; se escribe tras confirmar = el aprendiz puede vetarlo)
+  'home.welcomeBack': 'Bienvenido de nuevo',
+  'home.warmupCta': 'Calentamiento: {name}',
+  'home.warmupCtaPlain': 'Calienta con una pregunta',
+  'home.warmupHintSchedule': 'Una estación que el calendario dejó atrás: una pregunta para retomar el ritmo',
+  'home.warmupHintWeak': 'Tu punto más débil: una pregunta para retomar el ritmo',
+  'home.warmupHintNext': 'Tu próxima estación: una pregunta para retomar el ritmo',
+  'home.shiftAdviceDeadline': 'Con tu ritmo medido (≈{pace} días/unidad en {window} días), las {n} unidades restantes necesitan ~{days} días — se puede reprogramar: confírmalo con tu coach en la próxima sesión para desplazar el calendario {shift} días',
+  'home.shiftAdviceNoDeadline': 'Con tu ritmo medido (≈{pace} días/unidad en {window} días), las {n} unidades restantes necesitan ~{days} días — se puede reprogramar: confírmalo con tu coach en la próxima sesión para desplazar el calendario {shift} días',
+  'home.planRemaining': 'Quedan {n} unidades',
+  'home.planStatusInProgress': 'En curso',
+  'home.planStatusPaused': 'En pausa',
+
+  // Página de panorama por punto de examen /panorama (v0.25: barra de composición + ruta de
+  // nodos por gran tema + panel de detalle con traza; criterio src/lib/panorama.ts)
+  'panorama.title': 'Panorama',
+  'panorama.taught': 'Visto',
+  'panorama.practiced': 'Practicado',
+  'panorama.mastered': 'Dominado',
+  'panorama.answered': 'Resp {answered}/{total}',
+  'panorama.oral': 'Orales {correct}/{asked}',
+  'panorama.stale': 'La señal de visto corresponde al último build; las respuestas y los resultados orales son en vivo (los puntos sin datos orales en vivo vuelven al último build).',
+  'panorama.graphHint': 'Las conexiones vienen de la proyección del grafo de conocimiento: flechas continuas = prerrequisito (aprender primero), discontinuas = relación; nodos = cuatro estados de dominio.',
+  'panorama.stateMastered': 'Dominados',
+  'panorama.stateInProgress': 'En estudio',
+  'panorama.stateWeak': 'Débiles',
+  'panorama.stateUntouched': 'Sin tocar',
+  'panorama.totalPoints': '{n} puntos en total',
+  'panorama.knowflowLabel': 'Conexiones de prerrequisitos',
+  'panorama.byTopic': 'Puntos por gran tema',
+  'panorama.byTopicHint': 'Un nodo = un punto · Toca un nodo para ver su traza / ir a sus preguntas',
+  'panorama.topicMasteredPrefix': 'Dominados',
+  'panorama.topicEpUnit': 'puntos',
+  'panorama.noEp': 'Este banco de preguntas no tiene puntos de examen marcados (examPoint): no se puede derivar el dominio.',
+  'panorama.filterAll': 'Todos',
+  'panorama.filterWeak': 'Solo débiles',
+  'panorama.filterUnmastered': 'Solo sin dominar',
+  'panorama.filterAria': 'Filtrar puntos de examen',
+  'panorama.sheetClose': 'Cerrar',
+  'panorama.sheetPractice': 'Practicar este punto',
+  'panorama.sheetCourse': 'Ver curso',
+  'panorama.statWrongTimes': 'Fallos: {n}',
+  'panorama.statFlash': 'Tarjetas {graduated}/{mapped} graduadas',
+  'panorama.timelineTitle': 'Traza de aprendizaje',
+  'panorama.timelineEmpty': 'Aún no hay huellas de estudio: empieza este punto desde las acciones de abajo',
+  'panorama.tlToday': 'Hoy',
+  'panorama.tlFirst': 'Primer contacto',
+  'panorama.tlCorrect': 'Acierto',
+  'panorama.tlWrong': 'Fallo',
+  'panorama.tlWrongRun': '{n} fallos seguidos',
+  'panorama.tlOralCorrect': 'Respuesta oral correcta',
+  'panorama.tlOralWrong': 'Respuesta oral incorrecta',
+  'panorama.tlFlash': 'Tarjeta graduada',
+  'panorama.tlMastered': 'Punto dominado',
+  'panorama.tlMasteredSub': 'Todo correcto + sin fallos abiertos',
+
+  // Línea de resumen del plan en el panorama (#93 conservada; solo si el tema activo tiene
+  // plan.json. Los chips de días del plan se retiraron de esta página — spec #110 Q3; el panel
+  // completo del plan está en inicio. Criterio src/lib/plan.ts; ritmo reutiliza home.plan*)
+  'panorama.planDone': 'Plan: {done}/{total} completadas',
+
+  // Tarjeta «próxima parada» del panorama (v0.25 tique 6, spec #110 «A · tarjeta de
+  // recomendación»): motivo principal (reforzar lo débil con puntos bloqueados / prerrequisitos
+  // desbloqueados / retraso — el retraso solo si el tema tiene fecha objetivo) + enlace
+  // alternativo + botón verde directo
+  'panorama.nextLabel': 'Próxima parada',
+  'panorama.nextGoWeak': 'Refuerza esta lección',
+  'panorama.nextGo': 'Estudia esta lección',
+  'panorama.nextWhyWeak': '{n} fallos aún sin superar',
+  'panorama.nextWhyWeakBlocks': '{n} fallos aún sin superar, frenan a {m} puntos posteriores ({names})',
+  'panorama.nextWhyUnlocked': 'Prerrequisitos desbloqueados: lo siguiente en la ruta',
+  'panorama.nextWhySchedule': 'Lo siguiente según tu calendario de estudio',
+  'panorama.nextWhyBehind': '{n} días de retraso respecto al calendario (objetivo: {date})',
+  'panorama.nextAltWeakPref': '¿Prefieres no repasar? Sigue la estructura →',
+  'panorama.nextAltWeakPrefSched': '¿Prefieres no repasar? Sigue el calendario →',
+  'panorama.nextAltGenPref': 'Otra prioridad →',
+  'panorama.nextAltAfter': 'A continuación →',
+  'panorama.nextAltUnlocked': '{name} · prerrequisitos listos',
+  'panorama.nextAltNext': '{name} · siguiente en el calendario',
+  'panorama.nextAltWeak': '{name} · débil',
+
+  // Cita de ritmo del panorama (tique 6: solo si el tema tiene fecha objetivo; abre el plan
+  // completo en inicio. Sin fecha objetivo esta línea no existe — cero presión. Si no hay datos
+  // de ritmo, degrada honestamente a la cuenta atrás hacia la fecha objetivo)
+  'panorama.paceProj': 'A tu ritmo actual, terminarás hacia el {date}',
+  'panorama.paceProjSlack': '{n} días de margen sobre tu objetivo',
+  'panorama.paceProjDeficit': '{n} días de retraso respecto a tu objetivo',
+  'panorama.paceDeadlineIn': 'Faltan {n} días para tu objetivo',
+  'panorama.paceDeadlineToday': 'Tu objetivo es hoy',
+  'panorama.paceDeadlineOver': 'El objetivo pasó hace {n} días',
+  'panorama.paceAria': 'Abrir el plan de estudio completo en la página de inicio',
+
+  // Práctica
+  'practice.readMode': 'Modo lectura',
+  'practice.layerAll': 'Todos',
+  'practice.redoSet': 'Rehacer esta serie',
+  'practice.redoSetTitle': 'Borrar las respuestas de esta serie y rehacerla',
+  'practice.jumpUnanswered': 'Ir a sin responder',
+  'practice.jumpUnansweredTitle': 'Saltar a la primera pregunta sin responder de la serie',
+  'practice.rereadSet': 'Releer esta serie',
+  'practice.rereadSetTitle': 'Borrar el progreso de lectura de esta serie y releerla',
+  'practice.viewPractice': 'Practicar',
+  'practice.viewRead': 'Leer',
+  'practice.mastered': 'Dominadas {n}',
+  'practice.readCount': 'Leídas {n}',
+  'practice.answeredCount': 'Respondidas {n}',
+  'practice.noWrong': '¡Aún no hay preguntas erróneas, ve a responder algunas!',
+  'practice.noQuestionsScope': 'No hay preguntas en «{name}».',
+  'practice.noQuestions': 'No hay preguntas.',
+  'practice.backHome': 'Volver al inicio',
+  'practice.prev': 'Anterior',
+  'practice.next': 'Siguiente',
+  'practice.finish': 'Terminar',
+  'practice.backToFirst': 'Volver a la primera',
+  'practice.nextSet': 'Siguiente serie: {label}',
+  'practice.stayHere': 'Quedarme aquí (cerrar)',
+  'practice.keepReading': 'Seguir leyendo (cerrar)',
+  'practice.labelWrong': 'Erróneas',
+  'practice.labelSequential': 'Práctica secuencial',
+  'practice.labelQuoted': '«{name}»',
+  'practice.confirmRedo':
+    '¿Restablecer las respuestas de {label}? ({n} preguntas, incluye aciertos/errores y progreso de erróneas. No se puede deshacer. No afecta a otros temas ni a las tarjetas.)',
+  'practice.confirmReread':
+    '¿Releer {label}? ({n} preguntas; borra el progreso de lectura de esta serie. No se puede deshacer. No afecta a las respuestas.)',
+  'practice.summaryAria': 'Resumen de práctica',
+
+  // Tarjeta de pregunta
+  'q.multi': 'Opción múltiple',
+  'q.judge': 'Verdadero/Falso',
+  'q.single': 'Opción única',
+  'q.difficulty': 'Dificultad {level}',
+  'q.index': 'Pregunta {n}',
+  'q.imageAlt': 'Imagen de la pregunta',
+  'q.submitSelfEval': 'Enviar (autoevaluada)',
+  'q.submit': 'Enviar',
+  'q.correct': '¡Correcto!',
+  'q.wrong': 'Incorrecto. Respuesta correcta: {answer}',
+  'q.wrongCountHistory': '· fallada {n} veces antes',
+  'q.wrongCountTotal': '· {n} fallos en total',
+  'q.streakProgress': '{streak}/{needed} aciertos seguidos: {left} más y sale del registro de erróneas',
+  'q.streakLabel': 'Racha de aciertos en erróneas',
+  'q.mastered': 'Dominada: sale del registro de erróneas',
+  'q.dismiss': 'Quitar',
+  'q.dismissTitle': 'Quitar del registro de erróneas (deja de repetirse)',
+  'q.confirmDismiss': '¿Quitar esta pregunta del registro de erróneas?',
+  'q.selfEvalNote': 'Autoevaluada (sin respuesta canónica)',
+  'q.analysis': 'Explicación:',
+  'opt.correctAnswer': 'Respuesta correcta',
+  'opt.wrongAnswer': 'Tu elección incorrecta',
+
+  // Diálogo de confirmación
+  'confirm.cancel': 'Cancelar',
+  'confirm.ok': 'Aceptar',
+  'confirm.aria': 'Confirmar acción',
+
+  // Valoración SRS
+  'srs.again': 'Repetir',
+  'srs.hard': 'Difícil',
+  'srs.good': 'Bien',
+  'srs.easy': 'Fácil',
+  'srs.aria': 'Valorar',
+
+  // Resumen de práctica
+  'summary.tierGood': 'Bien dominado',
+  'summary.tierOk': 'Sigue así',
+  'summary.tierLow': 'Practica más',
+  'summary.title': 'Práctica completada · {title}',
+  'summary.answered': 'Respondidas',
+  'summary.correctCount': 'Aciertos',
+  'summary.wrongCount': 'Errores',
+  'summary.selfRated': 'Incluye {n} autoevaluadas (no cuentan para la precisión)',
+  'summary.totalNote': '{n} preguntas · precisión acumulada del tema',
+  'summary.nextHook': 'Próxima vez: {name} — 3 preguntas orales, ~{minutes} min',
+  'summary.backHome': 'Inicio',
+  'summary.redo': 'Rehacer serie',
+
+  // Repaso de tarjetas
+  'fc.extraDone': '¡Práctica extra completada!',
+  'fc.extraDoneNote': 'Repasaste {n} tarjetas más; valoraciones guardadas',
+  'fc.back': 'Volver a tarjetas',
+  'fc.todayDone': '¡Repaso de hoy completado!',
+  'fc.todayDoneNote': 'Hoy repasaste {n} tarjetas',
+  'fc.streak': 'Racha de {n} días',
+  'fc.nextDue': 'Próxima tarjeta en {interval}',
+  'fc.learningLaterToday': '{n} tarjetas en aprendizaje vencen más tarde hoy; vuelve entonces',
+  'fc.extraRound': 'Otra ronda (repaso extra, no actualiza la racha)',
+  'fc.new': 'Nuevas',
+  'fc.learning': 'Aprendiendo',
+  'fc.review': 'Pendientes',
+  'fc.includesRelearn': '· {n} repasos extra',
+  'fc.extraTag': '· práctica extra',
+  'fc.phaseNew': 'Nueva',
+  'fc.phaseLearning': 'Aprendizaje {cur}/{total}·{step}m',
+  'fc.phaseRelearning': 'Reaprendizaje·{step}m',
+  'fc.phaseReview': 'Repaso',
+  'fc.hintFlip': 'Toca la tarjeta o pulsa Espacio para girarla',
+  'fc.hintRate': 'Valora abajo (o pulsa 1-4)',
+  'fc.showAnswer': 'Mostrar respuesta',
+
+  // Panel de tarjetas
+  'fch.title': 'Repaso de tarjetas',
+  'fch.tagline': 'Repetición espaciada · contra el olvido · {n} tarjetas',
+  'fch.todayDone': 'El repaso de hoy está listo',
+  'fch.start': 'Empezar el repaso de hoy',
+  'fch.count': '({n} tarjetas)',
+  'fch.nothingToday': 'Hoy no hay tarjetas pendientes',
+  'fch.rerunAll': 'Practicar las {n} tarjetas',
+  'fch.rerunNote': 'Práctica extra · no actualiza la racha · las valoraciones sí se guardan',
+  'fch.newPerDay': 'Nuevas tarjetas por día',
+  'fch.save': 'Guardar',
+  'fch.cancel': 'Cancelar',
+
+  // Cursos
+  'courses.notReady': 'Cursos no disponibles',
+  'courses.notReadyHint':
+    'El contenido viene de examples/<theme>/ — ejecuta pnpm run build (incluye sync:study) para sincronizarlo en public/study/.',
+  'courses.frameTitle': 'Sitio del curso',
+  'courses.index': 'Índice de lecciones',
+  'courses.tocCount': ' · {done}/{total}',
+  'courses.doneProgress': 'Lecciones completadas {done}/{total}',
+  'courses.markDone': '✓ Lección completada',
+  'courses.undoDone': 'Completada · Deshacer',
+  'courses.undoDoneTitle': 'Quitar la marca de completada de esta lección (abrir una lección nunca cuenta; solo este botón lo hace)',
+  'courses.goPractice': 'Practicar esta lección',
+
+  // Aviso de sincronización
+  'sync.local': 'Modo demo: el progreso se guarda solo en este navegador, sin sincronización',
+  'sync.remoteInvalid': 'Los datos de progreso del servidor tienen un formato antiguo y se han ignorado — el progreso sigue a este navegador por ahora; el próximo guardado lo reparará automáticamente',
+  'sync.retrying': 'Reintentando sincronización…',
+  'sync.error': 'Falló la sincronización: guardado localmente. Toca para reintentar.',
+  'sync.retry': 'Reintentar',
+  'sync.close': 'Cerrar',
+
+  // Tema claro/oscuro
+  'theme.light': 'Claro',
+  'theme.dark': 'Oscuro',
+  'theme.system': 'Sistema',
+  'theme.title': 'Actual: {label} (clic para cambiar)',
+  'theme.aria': 'Cambiar tema, actual: {label}',
+
+  // Panel de ajustes (preferencias de estudio)
+  'settings.title': 'Preferencias de Estudio',
+  'settings.close': 'Cerrar',
+  'settings.extLabel': 'Ejercicios Ampliados',
+  'settings.extDesc': 'Desactivado por defecto. Activado = mostrar la capa ampliada (preguntas por capítulo): filtro de capa en práctica, bloques en la página principal — para reforzar temas débiles',
+  'settings.autoLabel': 'Avance Automático al Aciertar',
+  'settings.autoDesc': 'Activado por defecto. Salta a la siguiente pregunta 3 s tras acertar; desactivado = quedarse a leer la explicación',
+  'settings.quotaLabel': 'Nuevas Tarjetas al Día',
+  'settings.quotaDesc': 'Máximo de tarjetas nuevas por día (0-50), sincronizado con la página de tarjetas',
+  'settings.quotaMinus': 'Reducir límite',
+  'settings.quotaPlus': 'Aumentar límite',
+  'settings.syncHint': 'Las preferencias se sincronizan entre dispositivos con tu progreso',
+
+  // Panel de ajustes · restablecer datos (v0.25 entrada 2: las cuatro operaciones de reset que
+  // estaban en «Gestión del progreso» de la portada se reúnen aquí; solo afectan al tema actual)
+  'settings.resetTitle': 'Restablecer datos (solo el tema actual)',
+  'settings.resetPos': 'Restablecer posiciones',
+  'settings.confirmResetPos':
+    '¿Volver todas las listas de práctica (por día/tema) a la pregunta 1? (No afecta a tus respuestas)',
+  'settings.resetWrong': 'Borrar erróneas',
+  'settings.confirmResetWrong':
+    '¿Vaciar el registro de preguntas erróneas del tema actual? (La práctica de erróneas se quedará sin preguntas; no se puede deshacer)',
+  'settings.resetRead': 'Borrar lecturas',
+  'settings.confirmResetRead':
+    '¿Vaciar el progreso de lectura del tema actual? (No afecta a tus respuestas; no se puede deshacer)',
+  'settings.resetSrs': 'Borrar tarjetas',
+  'settings.confirmResetSrs':
+    '¿Vaciar el progreso de tarjetas del tema actual? Todas vuelven a estado nuevo y la racha se pone a cero. No se puede deshacer. (No afecta a respuestas ni lecturas)',
+  'settings.resetAllTheme': 'Vaciar TODO el progreso de este tema (incluidas las tarjetas)',
+  'settings.confirmResetAllTheme':
+    '¿Vaciar TODO el progreso del tema actual (respuestas + erróneas + lecturas + tarjetas)? No se puede deshacer y se sincronizará con todos tus dispositivos. Los demás temas no se ven afectados.',
+
+  // Cambio de idioma
+  'lang.aria': 'Cambiar idioma',
+  'lang.title': 'Idioma',
+};

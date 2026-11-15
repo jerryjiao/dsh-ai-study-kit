@@ -1,0 +1,381 @@
+#!/usr/bin/env node
+/**
+ * mastery-report.mjs — 考点掌握报告（无 AI，纯确定性派生；人与 agent 共用）。
+ *
+ * 从主题题库 + 答题进度派生每个考点（EP-NN）的掌握度，并 join 学习者档案
+ * （study/records/profile.json，grill 串讲顺产的错因记录，存在才带上）。
+ *
+ * 判据（v1.2，#119 / spec #118：题主证 + 口述/闪卡任一超题证据）：mastered = 考点下题
+ * 全答对、无未毕业错题，且口述达标（若该考点已有口述数据）或映射闪卡全部毕业（可选替代
+ * 通道）任一满足；无口述数据时题全对即掌握（零闪卡 chat-first 解锁，SRS 彻底可选）。
+ * 详见 lib/mastery.mjs 头注。
+ *
+ * 用法：
+ *   node apps/quiz-app/scripts/mastery-report.mjs                    # 默认 dev-intro，人类可读
+ *   node apps/quiz-app/scripts/mastery-report.mjs --theme X          # 指定主题（支持外部主题包路径）
+ *   node apps/quiz-app/scripts/mastery-report.mjs --json             # 机器可读（agent 探测用）
+ *   node apps/quiz-app/scripts/mastery-report.mjs --progress /tmp/p.json   # 指定进度文件
+ *   node apps/quiz-app/scripts/mastery-report.mjs --panorama [--json]      # 考点全景（讲/练/掌三信号，v0.13）
+ *
+ * 口头四态（v0.14）：--json 的 oral 字段输出每个口头目标（题库考点 ∪ 流水裸知识点）的
+ * 四态与「问 N 对 M」统计——近期加权正确率（近 5 次权重 0.5/0.7/0.85/0.95/1.0）+
+ * 置信度封顶（1 次封 0.5、2 次封 0.8），零 LLM；无流水目标 = 未开始。
+ * v1.2（#119）起口头四态参与考点掌握判据（达标 = 超题证据主通道、weak = 负面证据优先），
+ * 与题库通道在 masteryByExamPoint 内合流；口径与 TS 侧 src/lib/mastery.ts 一致（跨侧夹具
+ * 断言见 src/lib/mastery.test.ts）。
+ *
+ * 口述错因台账（#132，spec #131 / 决议 #128）：--json 的 misconceptions 字段输出台账消费
+ * 视图（study/records/misconceptions.json，学习者私有可选）——双源错因 join 的口述侧：
+ * points[].misconceptions（口述来源）与 points[].profile（题库题 id 来源）按 EP 合流并列；
+ * 状态 open/corrected/recurred 由后续口述流水派生（deriveMisconceptionStatuses），不改写
+ * 旧条目。无台账 / 坏台账 / 条目全属他主题 → 字段静默缺席，输出与功能前零变化；台账是
+ * 证据源不是判据输入，不进 masteryByExamPoint（v1.2 掌握判据语义不变）。
+ *
+ * 隔期复测候选（#133，spec #131 / 决议 #129）：--json 的 retest 字段输出复测候选——从台账
+ * open 条目 + 口述流水纯派生（lib/retest.mjs deriveRetest 三条件：open + 口头四态非
+ * mastered + 当天该目标无口述；多目标每会话取四态最弱 1 个 = retest.pick）。零闪卡可用
+ * （不依赖 srsDue）；无台账 → 字段静默缺席（与 misconceptions 同闸）。复测是证据消费不是
+ * 判据输入；出题与答对/答错后续口径单源 flows/F10.md「隔期复测」节（skill 侧）。
+ *
+ * 进度来源：--progress 指定的文件，默认 apps/quiz-app/progress.json（本地文件口径；
+ * 要看线上进度先 `curl -sf $SERVER/api/progress -o /tmp/p.json` 再传进来，与 skill state.md 同模式）。
+ * 文件不存在 = 空进度（全部 untouched），不是故障。
+ *
+ * --panorama（v0.13）：考点全景图——每考点三信号（讲过=契约二学习记录 ∪ 课已学完 /
+ * 练过=有答题或口头问答 / 掌握=四态判据不变），按排布表 day 分组 + 汇总行。
+ * 学习记录来自 study/records/*.md（契约二，parseSessionRecord 解析）；口头信号 v0.14 起
+ * 以口头答题流水 study/records/oral-attempts.json 为唯一真源（旧记录手写计数节照读合并）。
+ * records 与流水都是学习者私有不上站，本命令在本地读它们派生信号。
+ * 消费方：skill「报进度」全景卡、web 覆盖快照（同判据）。
+ */
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { resolveThemeDir } from './lib/theme-path.mjs';
+import { epNameMap, epDayMap, masteryByExamPoint, rankWeakness } from './lib/mastery.mjs';
+import { buildPanorama } from './lib/panorama.mjs';
+import { readSessionRecords, lessonsReadState } from './lib/coverage.mjs';
+import { readOralAttempts, oralAttemptsFromProgress, mergeOralAttempts, groupOralAttempts, oralMastery, rankOralWeakness, oralAttemptsPath, graphNodeIndex } from './lib/oral.mjs';
+import { readMisconceptions, deriveMisconceptionStatuses, misconceptionView } from './lib/misconceptions.mjs';
+import { deriveRetest } from './lib/retest.mjs';
+import { loadGraphMap, loadKnowledgeGraph, buildProjection, projectionPathFor, buildPrereqSignals, orderEpsByPrereqs } from './lib/graph-bridge.mjs';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(__dirname, '..', '..', '..');
+
+// ── 参数解析 ──────────────────────────────────────────────
+const args = process.argv.slice(2);
+const take = (flag) => {
+  const i = args.indexOf(flag);
+  return i >= 0 ? args[i + 1] : undefined;
+};
+const { dir: THEME_DIR, name: THEME } = resolveThemeDir(
+  take('--theme') || process.env.EXAMPLE_THEME || 'dev-intro',
+  REPO_ROOT
+);
+const AS_JSON = args.includes('--json');
+const AS_PANORAMA = args.includes('--panorama');
+const PROGRESS_PATH = take('--progress') || join(REPO_ROOT, 'apps', 'quiz-app', 'progress.json');
+// 投影桥（v0.14，ADR-0005）：knowflow 图位置以参数/环境变量传入（同进度文件模式）；
+// --write-projection 现算后产出只读投影文件（默认落 graph.json 同目录 mastery-projection.json）。
+const GRAPH_PATH = take('--graph') || process.env.KNOWFLOW_GRAPH_JSON || null;
+const WRITE_PROJECTION = args.includes('--write-projection');
+
+// ── 数据装载 ──────────────────────────────────────────────
+const questionsPath = join(THEME_DIR, 'questions.json');
+if (!existsSync(questionsPath)) {
+  console.error(`❌ 找不到题库：${questionsPath}`);
+  process.exit(1);
+}
+const questions = JSON.parse(readFileSync(questionsPath, 'utf-8'));
+
+const missionPath = join(THEME_DIR, 'MISSION.md');
+const epNames = existsSync(missionPath) ? epNameMap(readFileSync(missionPath, 'utf-8')) : {};
+
+let progress = null;
+if (existsSync(PROGRESS_PATH) && PROGRESS_PATH) {
+  try { progress = JSON.parse(readFileSync(PROGRESS_PATH, 'utf-8')); } catch { progress = null; }
+}
+const answers = (progress && progress.answers) || {};
+const srs = (progress && progress.srs) || {};
+
+// 闪卡（可选）：examPoint 有映射的卡参与掌握度判据的闪卡毕业组件
+const flashcardsPath = join(THEME_DIR, 'flashcards.json');
+let flashcards = [];
+if (existsSync(flashcardsPath)) {
+  try { flashcards = JSON.parse(readFileSync(flashcardsPath, 'utf-8')); } catch { flashcards = []; }
+}
+
+// 学习者档案（可选）：按 questionIds 与考点求交，把 grill 记下的错因/建议贴到对应考点
+const profilePath = join(THEME_DIR, 'study', 'records', 'profile.json');
+let profile = null;
+if (existsSync(profilePath)) {
+  try { profile = JSON.parse(readFileSync(profilePath, 'utf-8')); } catch { profile = null; }
+}
+
+// 口头答题流水（v0.14，可选；#122 起双源并流）：主题包流水（唯一真源原文）∪ 进度数据面
+// progress.oralAttempts（教练侧 POST /api/oral-attempts 回流的实时副本，条目带 theme 归属）。
+// 两路是同一笔作答——mergeOralAttempts 四元组去重，不重复计数。progress 无该字段（v0.26
+// 前旧部署）= 只读主题包，行为与从前一致。
+// 本报告给每个口头目标（题库考点 ∪ 流水里出现过的裸知识点）判口头四态——
+// 近期加权正确率 + 置信度封顶，范式照搬 DeepTutor compute_mastery，确定性零 LLM；
+// 既有考点四态判据自 v1.2（#119）起纳入口述通道（见下方派生段的 oralStatusByEp），判据本体在
+// lib/mastery.mjs；节点投影等处的四态合流规则见 lib/oral.mjs mergeMastery（对已内置结果幂等）。
+const oralFromProgress = oralAttemptsFromProgress(progress, THEME);
+const oralAttempts = mergeOralAttempts(readOralAttempts(THEME_DIR), oralFromProgress);
+
+// ── 考点全景（--panorama，v0.13）：三信号 + day 分组，与掌握报告同数据源另派生一路 ──
+if (AS_PANORAMA) {
+  // 契约二学习记录 + 课已学完：与 sync-examples 的覆盖快照共用同一组装载器
+  const records = readSessionRecords(THEME_DIR);
+  const { lessonsTotal, lessonsDone } = lessonsReadState(THEME_DIR, THEME, progress);
+
+  const missionText = existsSync(missionPath) ? readFileSync(missionPath, 'utf-8') : '';
+  const panorama = {
+    tool: 'mastery-panorama',
+    theme: THEME,
+    generatedAt: new Date().toISOString(),
+    progressSource: existsSync(PROGRESS_PATH) ? PROGRESS_PATH : '(空进度，全部未开始)',
+    ...buildPanorama({
+      questions, answers, srs, flashcards,
+      epNames, epDays: epDayMap(missionText), records, oralAttempts,
+      coursesRead: { lessonsTotal, lessonsDone },
+    }),
+  };
+
+  if (AS_JSON) {
+    console.log(JSON.stringify(panorama, null, 2));
+  } else {
+    const s = panorama.summary;
+    const flag = (b) => (b ? '✓' : '·');
+    console.log(`🗺️ 考点全景 · ${THEME}`);
+    console.log(`   进度源：${panorama.progressSource} · 记录 ${records.length} 份 · 口头流水 ${oralAttempts.length} 条 · 课已学完 ${lessonsDone}/${lessonsTotal}${panorama.courseTaughtAll ? '（课程通道：全部考点记讲过）' : ''}`);
+    console.log(`   总览：已讲 ${s.taught}/${s.examPoints} · 已练 ${s.practiced}/${s.examPoints} · 已掌握 ${s.mastered}/${s.examPoints}`);
+    console.log('');
+    for (const g of panorama.groups) {
+      console.log(`  ${g.day}｜已讲 ${g.summary.taught}/${g.summary.total} · 已练 ${g.summary.practiced}/${g.summary.total} · 已掌握 ${g.summary.mastered}/${g.summary.total}`);
+      for (const p of g.points) {
+        const oral = p.oral ? ` · 口头 ${p.oral.correct}/${p.oral.asked}` : '';
+        const wrong = p.openWrong ? ` · 未毕业错题 ${p.openWrong}` : '';
+        console.log(`    ${flag(p.taught)}讲 ${flag(p.practiced)}练 ${flag(p.mastered)}掌  ${p.ep} ${p.name}（答 ${p.answered}/${p.total}${oral}${wrong}）`);
+      }
+    }
+  }
+  process.exit(0); // 全景模式到此为止，不输出掌握报告
+}
+
+// ── 派生 ──────────────────────────────────────────────────
+
+// 投影桥（v0.14，ADR-0005）：knowflow 图 + 考点节点映射 → 只读投影（节点四态供图着色）。
+// 图与映射缺任一即静默降级为纯考点口径（graph.loaded = false），绝不报错——
+// 没装 knowflow 的用户看不到任何变化。映射文件学习者私有（不上站不提交，ADR-0002）。
+const graphMap = loadGraphMap(THEME_DIR);
+const graph = loadKnowledgeGraph(GRAPH_PATH);
+const graphNodes = graphNodeIndex(graph);
+
+// 口头四态（v0.14）：排布表全部考点（无流水 = 未开始）∪ 流水里的裸知识点（无题新知识）。
+// EP 目标的 status 是纯口头通道判据（近期加权 + 置信度封顶）。
+// 解析链带图节点直引（graphNodes）——图节点路径/label 引用的问答归节点桶，不冒充裸名。
+const oralGroups = groupOralAttempts(oralAttempts, { epNames, graphMap, graphNodes: graphNodes ?? undefined });
+
+// 口述四态 → 考点掌握判据（v1.2，#119）：只带「有流水的考点」进 oralByEp——
+// 无流水 = 无口述数据 = 不阻塞（chat-first 零闪卡解锁的默认形态）。
+const oralStatusByEp = new Map();
+for (const [ep, attempts] of oralGroups.byEp) oralStatusByEp.set(ep, oralMastery(attempts).status);
+
+const { points, untracked } = masteryByExamPoint({ questions, answers, epNames, flashcards, srs, oralByEp: oralStatusByEp });
+const weak = rankWeakness(points);
+const byStatus = (s) => points.filter((p) => p.status === s).length;
+
+const oralTargets = [
+  ...Object.entries(epNames).map(([ep, name]) => {
+    const m = oralMastery(oralGroups.byEp.get(ep) ?? []);
+    return { target: ep, kind: 'ep', name, ep, node: null, ...m };
+  }),
+  ...[...oralGroups.byName.keys()].map((name) => {
+    const m = oralMastery(oralGroups.byName.get(name));
+    return { target: name, kind: 'name', name, ep: null, node: null, ...m };
+  }),
+];
+const oralWeak = rankOralWeakness(oralTargets);
+
+// 投影构建（graphMap / graph / graphNodes 已在上面装载）
+let graphSignal = { loaded: false, path: GRAPH_PATH || '(未传 --graph / KNOWFLOW_GRAPH_JSON)', note: '无图数据，功能静默降级为纯考点口径' };
+let projectionResult = null;
+if (graph) {
+  const pkgVer = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf-8')).version;
+  const projection = buildProjection({
+    graph, graphMap, points, oralAttempts, epNames,
+    generatedAt: new Date().toISOString(),
+    source: `ai-study-kit mastery v${pkgVer}`,
+  });
+  graphSignal = {
+    loaded: true,
+    path: GRAPH_PATH,
+    nodeCount: graph.nodes.length,
+    edgeCount: graph.edges.length,
+    mappedCount: graphMap ? graph.nodes.filter((n) => graphMap.byNode.has(n.id)).length : 0,
+    hasGraphMap: !!graphMap,
+    nodes: projection.nodes,   // 节点四态 + 口头统计（agent 探测消费）
+  };
+  // 前置关系信号（v0.14）：弱项的前置链 + 尊重前置顺序的推荐序
+  // （推荐理由从「刷 EP-12」具体到「前置概念 X 还弱，先补它」；无图/无映射 = 无此字段，静默降级）
+  const prereq = buildPrereqSignals({ graph, graphMap, points });
+  if (prereq) {
+    graphSignal.prereqEdges = prereq.prereqEdges;
+    graphSignal.relatedEdges = prereq.relatedEdges;
+    graphSignal.weakPrereqs = Object.fromEntries(
+      weak.filter((p) => prereq.chainByEp.has(p.ep)).map((p) => [p.ep, prereq.chainByEp.get(p.ep)])
+    );
+    graphSignal.weakOrdered = orderEpsByPrereqs(weak.map((p) => p.ep), prereq.prereqByEp);
+  }
+  if (WRITE_PROJECTION) {
+    const outPath = projectionPathFor(GRAPH_PATH);
+    writeFileSync(outPath, JSON.stringify(projection, null, 2) + '\n');
+    projectionResult = { written: true, path: outPath, generatedAt: projection.generatedAt, source: projection.source };
+  }
+}
+
+// 口述错因台账（#132，spec #131 / 决议 #128）：study/records/misconceptions.json（学习者
+// 私有，可选）——聊天陪练中已判明的口述错误与诊断的跨会话记忆。消费视图 = 双源错因 join 的
+// 口述侧：profile（题库题 id 来源）∪ 台账（口述来源）按 EP 合流，points[].misconceptions 与
+// points[].profile 并列。状态（open/corrected/recurred）由后续口述流水派生，不改写旧条目。
+// 台账是证据源不是判据输入：不进 masteryByExamPoint，v1.2 掌握判据零变化。
+// 无台账 / 坏台账 / 全部条目属他主题 → 空台账：全部字段静默缺席，输出与功能前零变化。
+const misconceptionsRaw = readMisconceptions(THEME_DIR, THEME);
+let misconceptionsSignal = null;
+if (misconceptionsRaw.length) {
+  misconceptionsSignal = misconceptionView(deriveMisconceptionStatuses(misconceptionsRaw, oralAttempts, {
+    epNames, graphMap, graphNodes: graphNodes ?? undefined,
+  }));
+}
+
+// 隔期复测候选（#133，spec #131 / 决议 #129）：台账 open 条目 + 口述流水纯派生——三条件
+// （open + 口头四态非 mastered + 当天该目标无口述）+ 弱项排序，每会话 1 目标（retest.pick，
+// 多通道同目标当天去重）。零闪卡可用（不依赖 srsDue）；与 misconceptions 同闸：无台账 →
+// 字段静默缺席。复测是证据消费不是判据输入，不进 masteryByExamPoint；出题与答对/答错
+// 后续口径单源 skill 侧 flows/F10.md「隔期复测」节。now 一律真实 Date.now()（注入面只在隔离夹具）。
+let retestSignal = null;
+if (misconceptionsRaw.length) {
+  retestSignal = deriveRetest({
+    entries: misconceptionsRaw,
+    attempts: oralAttempts,
+    resolveOpts: { epNames, graphMap, graphNodes: graphNodes ?? undefined },
+    now: Date.now(),
+  });
+}
+
+const joinProfile = (p) => {
+  if (!profile || !Array.isArray(profile.examPoints)) return undefined;
+  const hit = profile.examPoints.find((e) =>
+    (e.questionIds || []).some((id) => p.questionIds.includes(id))
+  );
+  if (!hit) return undefined;
+  return { wrongReasons: hit.wrongReasons || [], advice: hit.advice || '', timesGrilled: hit.timesGrilled || 1 };
+};
+
+const report = {
+  theme: THEME,
+  generatedAt: new Date().toISOString(),
+  progressSource: existsSync(PROGRESS_PATH) ? PROGRESS_PATH : '(空进度，全部 untouched)',
+  summary: {
+    totalQuestions: questions.length,
+    examPoints: points.length,
+    mastered: byStatus('mastered'),
+    weak: byStatus('weak'),
+    inProgress: byStatus('inProgress'),
+    untouched: byStatus('untouched'),
+    untrackedQuestions: untracked,
+  },
+  points: points.map((p) => ({
+    ...p,
+    profile: joinProfile(p),
+    // 台账口述错因（双源 join 的口述侧；无台账时键缺席——输出与功能前零变化）
+    ...(misconceptionsSignal ? { misconceptions: misconceptionsSignal.byEp[p.ep] || [] } : {}),
+  })),
+  weakRanked: weak.map((p) => p.ep),
+  globalPatterns: (profile && profile.globalPatterns) || [],
+  oral: {
+    source: existsSync(oralAttemptsPath(THEME_DIR)) ? oralAttemptsPath(THEME_DIR) : '(无流水，口头目标全部未开始)',
+    askedTotal: oralAttempts.length,
+    // #122 实时回流：并流前进度数据面（progress.oralAttempts）贡献的条数（去重前口径，
+    // 供 agent 探测分辨「包内流水」与「API 回流副本」两路的健康度）
+    fromProgress: oralFromProgress.length,
+    targets: oralTargets,
+    weakRanked: oralWeak.map((t) => t.target),
+  },
+  graph: { ...graphSignal, projection: projectionResult },
+  // 口述错因台账消费视图（#132）：无台账时键整体缺席（静默降级，输出与功能前零变化）
+  ...(misconceptionsSignal ? { misconceptions: misconceptionsSignal } : {}),
+  // 隔期复测候选（#133）：与 misconceptions 同闸——无台账时键整体缺席（复测通道静默不出现）
+  ...(retestSignal ? { retest: retestSignal } : {}),
+};
+
+// ── 输出 ──────────────────────────────────────────────────
+if (AS_JSON) {
+  console.log(JSON.stringify(report, null, 2));
+} else {
+  const mark = { mastered: '✅ 掌握', weak: '⚠️  弱', inProgress: '… 进行中', untouched: '· 未开始' };
+  console.log(`📊 考点掌握报告 · ${THEME}`);
+  console.log(`   进度源：${report.progressSource}`);
+  console.log(`   总览：考点 ${points.length} 个 · 掌握 ${report.summary.mastered} · 弱 ${report.summary.weak} · 进行中 ${report.summary.inProgress} · 未开始 ${report.summary.untouched}${untracked ? `（${untracked} 题无考点标记未计入）` : ''}`);
+  console.log('');
+  for (const p of points) {
+    const wrong = p.openWrongIds.length ? `，未毕业错题 ${p.openWrongIds.length}（${p.openWrongIds.join(',')}）` : '';
+    const flash = p.flashOpenIds.length ? `，闪卡未毕业 ${p.flashOpenIds.length}（${p.flashOpenIds.join(',')}）` : '';
+    console.log(`  ${mark[p.status]}  ${p.ep} ${p.name}：${p.correctNow}/${p.total} 对${wrong}${flash}`);
+    if (p.profile && p.profile.wrongReasons.length) {
+      console.log(`        档案错因：${p.profile.wrongReasons.join('；')}${p.profile.advice ? `（建议：${p.profile.advice}）` : ''}`);
+    }
+    // 台账口述错因（双源 join 的口述侧；observed=事实 / diagnosis=推断，如实分开引述）
+    for (const m of p.misconceptions || []) {
+      const tag = m.status === 'open' ? '未清' : m.status === 'corrected' ? '已纠正' : '复发';
+      console.log(`        台账错因（${tag}）：说过「${m.observed.text}」${m.diagnosis ? `——判断根因：${m.diagnosis.text}` : ''}（${m.observed.source}）`);
+    }
+  }
+  if (oralTargets.length) {
+    console.log('');
+    console.log(`  🗣️ 口头抽背（流水 ${oralAttempts.length} 条 · 口径：近 5 次加权 + 置信度封顶）`);
+    for (const t of oralTargets) {
+      const score = t.score === null ? '' : ` · 加权 ${t.score}`;
+      console.log(`    ${mark[t.status]}  ${t.kind === 'ep' ? `${t.ep} ${t.name}` : `${t.name}（无题知识点）`}：问 ${t.asked} 对 ${t.correct}${score}`);
+    }
+    if (oralWeak.length) {
+      console.log(`  👉 口头弱项：${oralWeak.slice(0, 3).map((t) => (t.kind === 'ep' ? `${t.ep} ${t.name}` : t.name)).join('、')}`);
+    }
+  }
+  if (misconceptionsSignal && misconceptionsSignal.unlocated.length) {
+    // 未定位桶：裸名（via=null）条目不归任何 EP，按名字聚合如实呈现（不猜归属）
+    const tag = { open: '未清', corrected: '已纠正', recurred: '复发' };
+    console.log('');
+    console.log(`  📒 口述错因台账 · 未定位 ${misconceptionsSignal.unlocated.length} 条（目标不在排布表/图，按名字聚合）：`);
+    for (const m of misconceptionsSignal.unlocated) {
+      console.log(`    ${tag[m.status]}  ${m.name}：说过「${m.observed.text}」${m.diagnosis ? `——判断根因：${m.diagnosis.text}` : ''}（${m.observed.source}）`);
+    }
+  }
+  if (retestSignal && retestSignal.pick) {
+    // 复测候选（#133）：每会话 1 目标（pick）——observed 事实与 diagnosis 推断分开引述（教练解释「为何选它」的依据面）
+    const p = retestSignal.pick;
+    const where = p.ep ? `${p.ep} ${p.name}` : p.node ? `${p.name}（图节点）` : `${p.name}（未定位）`;
+    const m0 = p.misconceptions[0];
+    console.log('');
+    console.log(`  🔁 复测候选：${where}（口头 ${p.oral.status} · 问 ${p.oral.asked} 对 ${p.oral.correct} · 未清错因 ${p.openCount} 条）`);
+    console.log(`     依据：说过「${m0.observed.text}」${m0.diagnosis ? `——判断根因：${m0.diagnosis.text}` : '（无诊断，按观察出变体）'}——沿根因出变体再验，答对即清`);
+  }
+  if (graphSignal.loaded) {
+    const prereqNote = graphSignal.prereqEdges !== undefined ? ` · 前置边 ${graphSignal.prereqEdges}` : '';
+    const orderNote = graphSignal.weakOrdered && graphSignal.weakOrdered.length && weak.length >= 2
+      ? `\n  👉 推荐序（前置先学）：${graphSignal.weakOrdered.slice(0, 5).join(' → ')}`
+      : '';
+    console.log('');
+    console.log(`  🕸️ 知识图：${graphSignal.nodeCount} 节点 · ${graphSignal.edgeCount} 边 · 映射 ${graphSignal.mappedCount}${prereqNote}${projectionResult ? ` · 投影已产出 ${projectionResult.path}` : '（加 --write-projection 产出投影文件）'}${orderNote}`);
+  }
+  if (report.globalPatterns.length) {
+    console.log('');
+    console.log(`  🧭 全局模式：${report.globalPatterns.join('；')}`);
+  }
+  if (weak.length) {
+    console.log('');
+    console.log(`  👉 最该先补：${weak.slice(0, 3).map((p) => `${p.ep} ${p.name}`).join('、')}`);
+  }
+}

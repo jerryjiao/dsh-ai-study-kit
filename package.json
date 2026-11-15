@@ -1,0 +1,54 @@
+{
+  "name": "dsh-ai-study-kit",
+  "version": "0.1.0",
+  "description": "AI 学习教练 for DeepSeek Harness：把 ai-study-kit 的五个学习教练 skill（路由、陪练、体检、错题串讲、播客）打包成 DSH 插件，并附带完整答题站快照 kit。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "icon": "./icon.png",
+  "files": [
+    "lib",
+    "skills",
+    "kit",
+    "references",
+    "locale/*.json",
+    "cordis.patch.yml",
+    "icon.png",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "ai-study-kit",
+    "study-coach",
+    "learning",
+    "skills"
+  ],
+  "license": "MIT",
+  "author": "dsh-ai-study-kit contributors",
+  "homepage": "https://github.com/jerryjiao/dsh-ai-study-kit",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jerryjiao/dsh-ai-study-kit.git"
+  },
+  "engines": {
+    "node": ">=20",
+    "dsh": ">=0.2.1-rc.5 <0.3.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

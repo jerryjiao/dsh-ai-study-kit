@@ -1,0 +1,231 @@
+export type QType = 'single' | 'multi' | 'judge';
+
+/** UI 界面语言（顶栏可切换）。词典在 src/i18n/locales/。 */
+export type UiLang = 'zh' | 'en' | 'es' | 'ru' | 'ja';
+
+export interface Question {
+  id: string;                 // "GIT-001" | "LNX-002" 等，全局唯一稳定
+  source: string;             // 题源标识，自定义（如 "dev-intro"）
+  tier?: 'ext';               // 分层标记（可选）：'ext'=拓展层题，练习池默认过滤、设置面板开"拓展题"后放行。无标记=核心层
+  topic?: string;
+  subtopic?: string;          // 大类下的细分考点（可选，用于主题内分组）
+  day?: string;               // 学习日程标签（可选，如 "D1".."D8"，对应主题课表）
+  type: QType;                // single | multi | judge
+  question: string;
+  options: Record<string, string>;  // {"A":"..."} 可到 "L"
+  answer: string[];           // ["C"] | ["A","B","D"]；图片题自评模式为 []
+  difficulty?: string;        // "易"|"中"|"难"（可选）
+  analysis?: string;
+  examPoint?: string;
+  imageRef?: string;          // "image1.png" 等
+  autoGradable?: boolean;     // false = 自评模式
+  note?: string;
+}
+
+export interface AnswerRecord {
+  selected: string[];
+  correct: boolean | null;    // null = 未判分/自评
+  submittedAt: number;        // Date.now()
+  streak?: number;            // 连续答对次数；答错归 0，达到 streakToPass(wrongCount) 阈值移出错题集
+  wrongCount?: number;        // 累计答错次数（只增不减）；从未答错则无此字段。与 streak 独立——
+                              // streak 衡量"近期掌握"，wrongCount 衡量"历史难度"，互不覆盖。
+  /** 墓碑时间戳：reset 类操作"删除"该记录时打上，merge 时与 submittedAt 竞争定序——
+   *  墓碑新于记录=已删（读端视为无记录），后续若再次答题（新 submittedAt > 墓碑）则自动复活。
+   *  存在是因 writeProgress 是 read-merge-write（防多 tab 并发覆盖），直接删 key 会被旧快照补回。
+   *  undefined = 正常记录（向后兼容老 progress.json）。 */
+  deletedAt?: number;
+  /** 来自"随机20题"沙盒：仅随机模式答错时置 true。
+   *  语义：答错进错题本（wrongIds 保留），但不计入主进度统计——
+   *  computeStats（已答%/正确率）、首页"已答覆盖明细"、"上次答到"派生均跳过。
+   *  这样随机练习是"纯沙盒自测"：不污染系统学习进度，只把错题捞进错题本。
+   *  undefined = 正常记录（向后兼容老 progress.json）。 */
+  fromRandom?: boolean;
+}
+
+// —— 闪卡（间隔重复）——
+/** Anki 4 档评分：重学 / 困难 / 良好（默认推荐）/ 简单 */
+export type SrsGrade = 'again' | 'hard' | 'good' | 'easy';
+
+/** 卡片所处阶段：
+ *  - learning：新卡学习阶段，走 Anki 默认学习步 [1m, 10m]，good 到最后一步才毕业
+ *  - relearning：复习卡 lapse（评 again）后重学，走重学步 [10m]
+ *  - review：已毕业，进入 SM-2 长期间隔重复 */
+export type SrsPhase = 'learning' | 'relearning' | 'review';
+
+/** 一张卡的 SRS 调度状态（SM-2 算法 + Anki 学习步），按卡 id 存进 Progress.srs */
+export interface SrsState {
+  ease: number;        // 易度因子，初值 2.5，下限 1.3
+  interval: number;    // 当前间隔（天）；learning/relearning 阶段 <1（按分钟换算）
+  reps: number;        // 连续答对次数；答 again 归 0
+  due: number;         // 下次到期时间戳（ms）；≤ now 表示该复习了
+  updatedAt: number;   // 最后复习时间戳（ms）— 跨设备合并取新
+  phase: SrsPhase;     // 卡片阶段（学习/重学/复习）
+  stepIdx: number;     // learning/relearning 阶段当前在第几个学习步（0-based）
+  lapses: number;      // 复习阶段答 again 的累计次数（lapse 计数）
+  /** 墓碑时间戳：resetSrs"删除"该卡时打上，merge 时与 updatedAt 竞争定序。
+   *  机制同 AnswerRecord.deletedAt——直接清 srs:{} 会被旧快照补回，故用墓碑。
+   *  undefined = 正常记录。 */
+  deletedAt?: number;
+}
+
+/** 闪卡：正面提示 + 背面内容，独立于题库（题卡分离） */
+export interface Flashcard {
+  id: string;          // "FC-001"
+  front: string;
+  back: string;
+  source: string;
+  topic: string;
+  fromQuestionId?: string;  // 可选软关联：源自某道题
+  /** 可选考点映射（EP-NN，与题库 examPoint 同一命名空间）。有映射时掌握度判据把
+   *  闪卡毕业（SRS phase = review）计入该考点的 mastered 条件（见 src/lib/mastery.ts）；
+   *  无映射的卡不参与考点判据（按主题复习照常）。 */
+  examPoint?: string;
+}
+
+export interface SrsMeta {
+  /** 今日已引入的新卡数（用于"每日新卡配额"——Anki 防一天灌太多）。
+   *  每学一张新卡 +1；跨天（newTodayDate !== 今天）归零重计。 */
+  newToday: number;
+  /** 记录 newToday 对应的日期（new Date().toDateString()，与 streak 判定一致）。 */
+  newTodayDate: string;
+}
+
+// —— 学习计划（plan.json，主题数据）——
+/** 计划单元状态：planned 计划中 / in-progress 在学 / done 完成 / paused 搁置。
+ *  由学习流程维护（F10 开站/收站/搁置更新 plan.json 的字段），不是从答题进度派生。 */
+export type PlanUnitStatus = 'planned' | 'in-progress' | 'done' | 'paused';
+
+/** 计划单元：plan.json 的一行，主题自定义粒度（考点/站/章均可，不与 kit 固有粒度绑定）。
+ *  术语（计划单元/覆盖/节奏）见仓库 CONTEXT.md；分层决策见 docs/adr/0009。 */
+export interface PlanUnit {
+  id: string;               // 单元 id，主题内唯一（如 "U-01"）
+  title: string;            // 单元标题（剩余清单/计划面板展示）
+  order: number;            // 学习顺序（排序用，1 起）
+  /** 计划完成日（YYYY-MM-DD）。缺失 = 只进剩余清单、不参与日历对照（"今天该到哪"）。 */
+  plannedDate?: string;
+  /** 学程块映射（可选）：与 theme.json examDays 的 day 是**同一命名空间**（MISSION 排布表
+   *  day 列）——unit.day ≡ examDays 的 day；首页计划面板与全景页 day 卡是同一 day 的两个
+   *  呈现面，必须同源显示（ADR-0009 命名空间契约，禁止两处各写一套口径）。 */
+  day?: string;
+  /** 题库 topic id 关联（可选）：计划单元 → 题集直达；缺省无跳转。 */
+  topic?: string;
+  status: PlanUnitStatus;
+  /** 实际完成日（YYYY-MM-DD，可选）：status=done 时由学习流程记录。 */
+  doneDate?: string;
+}
+
+/** 重排审计条目（v0.27 #125）：计划生成器每次重排写回时**追加**一条进 `plan.rescheduled`
+ *  （历史全留 = 可追溯——每次挪动的时刻/原因/起点/尽头都在案），永不改写旧条目。
+ *  消费端（首页/全景的「已重排」钩子行、plan-report）只读最新一条判新鲜度。 */
+export interface PlanReschedule {
+  /** 写回时刻的真实时间戳（与 progress 的 submittedAt 同款红线：禁固定值、禁未来时间戳）。 */
+  at: number;
+  /** 触发原因：behind=落后触发（存在逾期单元）| gap=断档回归触发（#120 后移建议可算）|
+   *  manual=学习者点名重排（#121 原路径）。 */
+  reason: 'behind' | 'gap' | 'manual';
+  /** 触发时的节奏事实：behind=落后天数（正数）、gap=断档天数；manual=null。 */
+  triggerDays?: number | null;
+  /** 重排起点（YYYY-MM-DD，本地时区）：剩余单元从此日起按实测速率落位。 */
+  start: string;
+  /** 重排后的日程尽头（YYYY-MM-DD，本地时区）：最后一个剩余单元的 plannedDate。 */
+  scheduledEnd: string;
+}
+
+/** 学习计划：examples/<theme>/plan.json（可选主题数据；sync-examples 拷进
+ *  src/data/plan.json，缺失/损坏时回退空计划 {units:[]}，import 恒可解析）。
+ *  **主题数据不是运行期数据，不进 progress**——单元完成态由 status/doneDate 字段承载
+ *  （学习流程写回主题文件），与答题进度（progress.answers）分家；派生（覆盖/节奏/断档）
+ *  与展示住 kit，从本文件 + progress 现算，绝不写回（例外见 rescheduled：它是生成器
+ *  写回的**审计事实**，不是对账派生值——挪过就是挪过，不随当天进度漂移）。 */
+export interface PlanFile {
+  /** 目标完成日（可选，YYYY-MM-DD）：速率外推的对照锚点。 */
+  deadline?: string;
+  units: PlanUnit[];
+  /** 重排审计（可选，v0.27 #125）：生成器每次重排追加一条；读端最新一条判「已重排」。 */
+  rescheduled?: PlanReschedule[];
+}
+
+
+/** 口头答题流水条目（#122 实时回流）：聊天陪练每次口头问答一条明细。
+ *  形状与主题包 study/records/oral-attempts.json 同源（判据单源 scripts/lib/oral.mjs /
+ *  src/lib/oral.ts），多带 `theme` 归属标记（多主题隔离在读端做，见 oralAttemptsForTheme）。 */
+export interface OralAttempt {
+  /** 归属主题名（与 coursesRead 的 key 前缀同源）；缺省 = 读端宽容视为当前主题（手写数据兼容）。 */
+  theme?: string;
+  /** 目标引用：EP-NN 前缀（题库考点）| 裸考点名（兜底）。 */
+  target: string;
+  /** 对错布尔（判对 true / 判错 false）。 */
+  correct: boolean;
+  /** 作答时刻的真实 Date.now()（与 progress 同款红线：绝不允许固定值或未来时间戳）。 */
+  at: number;
+  /** 来源标记：recall 抽背 | recite 复述 | case 案例评分点；缺省/未知 = null。 */
+  source?: 'recall' | 'recite' | 'case' | null;
+}
+
+export interface Progress {
+  version: number;            // 固定 1
+  answers: Record<string, AnswerRecord>;  // key = question id
+  /** 口头答题流水（#122 实时回流）：教练陪练（skill F10）写主题包流水的同时把作答
+   *  POST /api/oral-attempts 提交到本字段，web 全景/掌握判据实时消费（不再等 build 快照）。
+   *  合并语义 = 并集 + 四元组去重 + 按 at 升序（mergeOralAttempts）；单边缺失 = 该边从未
+   *  写过、取存在一侧（浏览器整档 POST 不会冲掉教练回流），append-only 无墓碑无重置入口。
+   *  读端隔离：消费方先 oralAttemptsForTheme 过滤当前主题。 */
+  oralAttempts?: OralAttempt[];
+  read?: Record<string, number>;          // 看题进度：key=题id，value=已看时间戳(Date.now())
+  /** 看题墓碑：key=题id，value=删除时间戳。read 的 value 本身是时间戳无法承载墓碑，单独维护。
+   *  读 read 时若 read[id] < readTombstones[id] 视为已删（重看本题集用）。
+   *  merge 时两侧墓碑取 max（合并删除意图）。 */
+  readTombstones?: Record<string, number>;
+  srs?: Record<string, SrsState>;         // 闪卡 SRS 进度：key=卡id(FC-NNN)
+  srsMeta?: SrsMeta;                       // 闪卡全局元数据（今日新卡计数等）
+  /** 课已学完记录（显式确认制）：key="<theme>/<lesson文件名>"（如 "dev-intro/git-basics.html"），
+   *  value=学完时间戳（Date.now()）。key 自带主题前缀——多主题天然隔离，切主题互不干扰。
+   *  merge 走 per-key max（同 read 字段）。只有用户点「✓ 学完了」才写入（打开课程页不算）；
+   *  旧版「打开即自动记已读」产生的数据视为已确认保留，不清零。
+   *  「课全学完」边界 = isCourseRead 命中 src/data/courses.json 清单的全部 lesson。 */
+  coursesRead?: Record<string, number>;
+  /** 课已学完墓碑：key 同 coursesRead，value=撤销时间戳。点「撤销」时打上而非删 key——
+   *  writeProgress 是 read-merge-write，直接删 key 会被服务器旧快照补回（机制同 readTombstones）。
+   *  读端 isCourseRead 在 tomb >= seen 时视为未学完；merge 两侧墓碑取 max。 */
+  coursesReadTombstones?: Record<string, number>;
+  /** UI 主题偏好（非学习进度）：'light' | 'dark' | 'system'。
+   *  跨设备同步走 mergeProgress（按 themeUpdatedAt 取新，同 srs/newToday 模式）。
+   *  本地另有独立的 'ask-theme' key 供内联脚本秒读（见 index.html）。 */
+  theme?: 'light' | 'dark' | 'system';
+  themeUpdatedAt?: number;                // 主题最后变更时间戳（Date.now()），LWW 仲裁用
+  /** UI 语言偏好（非学习进度），跨设备同步同 theme 的 LWW 模式（langUpdatedAt 仲裁）。 */
+  lang?: UiLang;
+  langUpdatedAt?: number;                 // 语言最后变更时间戳（Date.now()），LWW 仲裁用
+  /** 学习偏好（非学习进度）：设置面板三项，见 LearnSettings。整体对象按 settingsUpdatedAt 做 LWW。 */
+  settings?: LearnSettings;
+  settingsUpdatedAt?: number;             // 学习偏好最后变更时间戳（Date.now()），LWW 仲裁用
+}
+
+/** 学习偏好（设置面板）：非学习进度、跨设备同步（整体 LWW）。
+ *  三项均可缺省 = 用默认行为；reset 清学习进度时保留。 */
+export interface LearnSettings {
+  /** 拓展层加练开关。false/缺省（默认）= 拓展彻底隐身：练习页层 chip 不渲染、
+   *  首页纯拓展块隐藏、layer=拓展 直达失效，一切列表只含计划内题；true = 拓展可见可选。 */
+  extOn?: boolean;
+  /** 答对自动跳下一题（3 秒）。true/缺省（默认）= 保持现行自动跳；false = 停在原题读解析。 */
+  autoAdvance?: boolean;
+  /** 每日新卡配额（闪卡）。缺省 = 5；历史值存 localStorage['ask-new-per-day']，读取时兼容回退。 */
+  dailyNewCards?: number;
+}
+
+export interface Stats {
+  total: number;
+  answered: number;
+  correct: number;
+  wrong: number;
+  accuracy: number;
+}
+
+/** 进度同步状态（纯 UI，不入 Progress 持久化）。
+ *  - saved：已同步（或未开始）
+ *  - error：POST 失败、已重试 3 次、入队待 flush
+ *  - local：本地模式（CONTEXT.md）——启动探测发现无后端，进度仅存本浏览器
+ *  - remote-invalid：服务器在线但远端快照形状不合格（旧格式/损坏），已忽略这份
+ *    快照——不锁本地模式，下次保存照常 POST 修复（审计 bug #53）
+ *  由 progressClient 通知，useProgress 维护，SyncStatusBanner 消费。 */
+export type SyncStatus = 'saved' | 'error' | 'local' | 'remote-invalid';

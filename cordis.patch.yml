@@ -1,0 +1,5 @@
+# dsh-ai-study-kit：把 ai-study-kit 的五个学习教练 skill 注册进 DSH。
+# 浏览器半边不需要——这是纯 Host 插件，只提供 skill。
+- insert:
+    - id: dsh-ai-study-kit
+      name: 'dsh-ai-study-kit'

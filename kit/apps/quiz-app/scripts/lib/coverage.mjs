@@ -1,0 +1,79 @@
+// coverage.mjs — 考点覆盖快照（内容无关，web「讲过」信号的上站通道）。
+//
+// 隐私边界：study/records/ 的学习记录是学习者私有（个人叙述：金句、错点原文），
+// 永不上站；web 首页面板需要的只是「哪些考点被讲过 / 口头练了几次」。本模块把全景
+// 压成**只含考点 id、三信号布尔、计数、四值枚举**的快照——不含任何叙述文字（有专门
+// 的内容断言测试盯住这条边界）。快照由 sync-examples 在 build 时写 src/data/coverage.json
+// （同步产物），面板新鲜度 = 上次 build；聊天层（mastery-report --panorama）永远现算最新。
+// v1.2（#119）起快照带 oralStatus（口头四态枚举）——web 侧掌握判据的超题证据输入，
+// 仍是无叙述的派生枚举值，不过隐私边界。
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { parseSessionRecord } from './records.mjs';
+
+/** 快照允许的字段白名单——内容断言测试之外的形状兜底（新增字段必须过「无个人叙述」评审）。 */
+const POINT_KEYS = ['ep', 'taught', 'practiced', 'mastered', 'oral', 'oralStatus'];
+const ORAL_KEYS = ['asked', 'correct'];
+/** 口头四态合法值（形状兜底：白名单之外再卡枚举值，防叙述性字符串混进 oralStatus）。 */
+const ORAL_STATUS_VALUES = ['mastered', 'inProgress', 'weak'];
+
+/**
+ * 全景（buildPanorama 输出）→ 内容无关覆盖快照（纯函数）。
+ * 只保留 id/布尔/计数；剥掉 name（web 从 theme.json examPoints 取显示名）与一切叙述性字段。
+ * graphEdges（可选，projectEdgesToEps 输出）→ graph.edges：考点间连线只有 EP id + 前置布尔，
+ * 仍是派生布尔面（无任何节点叙述）；无图 / null = 不带 graph 键（web 回退清单）。
+ * @param {object} panorama buildPanorama 的输出
+ * @param {Array|null} [graphEdges] EP 级边（EP-NN 对 + prerequisite 布尔）
+ * @returns {{generatedAt: string, courseTaughtAll: boolean, points: Array, graph?: object}}
+ */
+export function buildCoverageSnapshot(panorama, graphEdges = null) {
+  const out = {
+    generatedAt: new Date().toISOString(),
+    courseTaughtAll: !!panorama.courseTaughtAll,
+    points: (panorama.groups ?? []).flatMap((g) => (g.points ?? []).map((p) => {
+      const pt = {
+        ep: p.ep,
+        taught: !!p.taught,
+        practiced: !!p.practiced,
+        mastered: !!p.mastered,
+        oral: p.oral ? { asked: p.oral.asked, correct: p.oral.correct } : null,
+        oralStatus: ORAL_STATUS_VALUES.includes(p.oralStatus) ? p.oralStatus : null,
+      };
+      for (const k of Object.keys(pt)) if (!POINT_KEYS.includes(k)) delete pt[k];
+      if (pt.oral) for (const k of Object.keys(pt.oral)) if (!ORAL_KEYS.includes(k)) delete pt.oral[k];
+      return pt;
+    })),
+  };
+  if (Array.isArray(graphEdges) && graphEdges.length > 0) {
+    out.graph = {
+      edges: graphEdges.map((e) => ({ from: e.from, to: e.to, prerequisite: !!e.prerequisite })),
+    };
+  }
+  return out;
+}
+
+/** 读契约二学习记录（现行 study/records/ + 旧布局 learning-records/），坏文件跳过不拖垮。 */
+export function readSessionRecords(themeDir) {
+  const records = [];
+  for (const dir of ['study/records', 'learning-records']) {
+    const recDir = join(themeDir, dir);
+    if (!existsSync(recDir)) continue;
+    for (const f of readdirSync(recDir).filter((x) => x.endsWith('.md')).sort()) {
+      try { records.push(parseSessionRecord(readFileSync(join(recDir, f), 'utf-8'))); } catch { /* 单文件坏不拖垮 */ }
+    }
+  }
+  return records;
+}
+
+/** 课已学完状态（显式确认制，与 progress.ts isCourseRead / state.md §3 同口径）。 */
+export function lessonsReadState(themeDir, themeName, progress) {
+  const lessonsDir = join(themeDir, 'lessons');
+  const lessonFiles = existsSync(lessonsDir) ? readdirSync(lessonsDir).filter((f) => f.endsWith('.html')) : [];
+  const lessonsDone = lessonFiles.filter((f) => {
+    const seen = (progress?.coursesRead || {})[`${themeName}/${f}`];
+    if (seen === undefined) return false;
+    const tomb = (progress?.coursesReadTombstones || {})[`${themeName}/${f}`];
+    return tomb === undefined ? true : seen > tomb;
+  }).length;
+  return { lessonsTotal: lessonFiles.length, lessonsDone };
+}
