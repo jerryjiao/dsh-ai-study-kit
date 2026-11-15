@@ -116,7 +116,7 @@ DSH 的宿主插件没有「命令即 markdown」的机制，只有 **skill 注�
 
 ### 真实环境安装验证
 
-在 DSH 0.2.2-rc.3 中以本地目录方式安装本 bundle（`plugin_manager install_bundle`，pnpm 以 link 方式挂载本地目录），`plugin_manager list_plugins` 显示 `dsh-ai-study-kit` 的 `fiberPhase=active`，即 `apply()` 已执行、5 个 skill 注册成功；随后用 `plugin_manager remove_bundle` 卸载，条目从插件列表消失，不污染 profile。（若目标环境不允许安装本地插件，则以 `npm test` 全部通过为功能验证依据，安装步骤按 README 手动执行。）
+在 DSH 0.2.2-rc.3 中以本地目录方式安装本 bundle（`plugin_manager install_bundle`，pnpm 以 link 方式挂载本地目录），`plugin_manager list_plugins` 显示 `dsh-ai-study-kit` 的 `fiberPhase=active`，即 `apply()` 已执行、5 个 skill 注册成功；同一 bundle 以 GitHub 形式安装（`plugin_manager install_bundle target="github:jerryjiao/dsh-ai-study-kit"`，pnpm 从 GitHub 取包并解析为 `dsh-ai-study-kit 0.1.0`）也得到 `fiberPhase=active`，说明站点给出的 `dsh plugin add github:owner/repo` 安装路径成立。两次验证后均用 `plugin_manager remove_bundle` 卸载，条目从插件列表消失，不污染 profile。（若目标环境不允许安装本地插件，则以 `npm test` 全部通过为功能验证依据，安装步骤按 README 手动执行。）
 
 ## 6. 取舍记录
 
