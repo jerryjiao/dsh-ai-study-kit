@@ -20,6 +20,7 @@
 
 本插件是标准的 DSH bundle（`package.json` 里声明 `dsh.bundle.patch`）。
 
+- **直接从 GitHub 安装**：`dsh plugin add github:jerryjiao/dsh-ai-study-kit`。
 - **本地目录安装**（开发 / 未发布时）：在 DSH 的插件管理页添加本地插件，指向本仓库根目录；或在终端用 `dsh plugin add /绝对路径/dsh-study-kit`。
 - **按包名安装**（发布到 npm 后）：`dsh plugin add dsh-ai-study-kit`。
 
