@@ -67,7 +67,7 @@ const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
         function ok(b) {
           b.classList.add('is-copied');
           var s = b.querySelector('.copy-status');
-          if (s) s.textContent = document.documentElement.dataset.copied || '已复制';
+          if (s) s.textContent = document.documentElement.dataset.copied || '';
           clearTimeout(b._t);
           b._t = setTimeout(function () {
             b.classList.remove('is-copied');
