@@ -1,3 +1,5 @@
+[English](./README.en.md) | **简体中文**
+
 <p align="center">
   <img src="assets/logo.png" alt="dsh-ai-study-kit logo — an open book with a learning spark" width="140">
 </p>

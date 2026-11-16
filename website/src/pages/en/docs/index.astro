@@ -1,0 +1,499 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import SiteNav from '../../../components/SiteNav.astro';
+import SiteFooter from '../../../components/SiteFooter.astro';
+import CodeBlock from '../../../components/CodeBlock.astro';
+import Icon from '../../../components/Icon.astro';
+import { INSTALL_CMD, VERSION } from '../../../site-data';
+
+const base = import.meta.env.BASE_URL;
+
+const toc = [
+  { id: 'install', label: 'Install & upgrade' },
+  { id: 'structure', label: 'Project structure' },
+  { id: 'open', label: 'Open the Study Desk' },
+  { id: 'migrate', label: 'Migrating the old layout' },
+  { id: 'skills', label: 'Using the five skills' },
+  { id: 'data', label: 'Data & backup' },
+  { id: 'privacy', label: 'Privacy' },
+  { id: 'troubleshooting', label: 'Troubleshooting' },
+];
+
+const tree = `my-study/
+├─ examples/
+│  └─ git-basics/
+│     ├─ questions.json
+│     ├─ flashcards.json
+│     ├─ plan.json
+│     └─ theme-config.json
+├─ progress.json
+└─ study/
+   └─ records/`;
+---
+
+<Layout
+  lang="en"
+  title="Docs · AI Study Kit"
+  description="Installing AI Study Kit, project structure, using the Study Desk, migrating the old layout, the five skills, data backup and troubleshooting."
+>
+  <SiteNav lang="en" />
+  <main id="main" class="docs-main">
+    <div class="container docs-wrap">
+      <aside class="docs-aside">
+        <p class="docs-aside-label">Docs · v{VERSION}</p>
+        <nav class="docs-toc" aria-label="On this page">
+          {toc.map((item) => (
+            <a href={`#${item.id}`}>{item.label}</a>
+          ))}
+        </nav>
+        <a class="docs-back" href={`${base}en/`}>
+          <Icon name="arrow-right" size={16} /> Back to home
+        </a>
+      </aside>
+
+      <article class="prose">
+        <header class="docs-head">
+          <p class="kicker">Docs</p>
+          <h1>Install, structure, and everyday use</h1>
+          <p class="docs-lead">
+            This page covers the whole path from installing the plugin to studying day to day: how a project is laid out, how to open the Study Desk, how to migrate an old directory, what each of the five skills does, and where your data lives.
+          </p>
+        </header>
+
+        <section id="install">
+          <h2>Install &amp; upgrade</h2>
+          <p>
+            The plugin requires DSH ≥ 0.2.1-rc.5 and Node 22.19+. Check the host version before installing; after installing, restart the host.
+          </p>
+          <CodeBlock code={INSTALL_CMD} label="bash" lang="en" />
+          <p class="docs-note">Requires DSH ≥ 0.2.1-rc.5 and Node 22.19+.</p>
+
+          <h3>Which profile to install into</h3>
+          <p>
+            DSH can have several profiles, and the Study Desk appears in the sidebar of whichever profile the plugin is installed into.
+            <code class="inline-cmd">dsh plugin</code> requires <code class="inline-cmd">--profile</code>, placed between
+            <code class="inline-cmd">plugin</code> and <code class="inline-cmd">add</code>; the example below uses
+            <code class="inline-cmd">web</code>, the profile the GUI usually runs, so swap in your own profile name:
+          </p>
+          <CodeBlock code={'dsh plugin --profile web add dsh-ai-study-kit'} label="bash" lang="en" />
+          <p>
+            Once installed, check in plugin management that the status is active; the five skills (ask-coach / study-coach / study-doctor / study-recap / study-podcast) register together.
+          </p>
+
+          <h3>Install from GitHub or a local directory</h3>
+          <p>
+            You can also install straight from the repository, or point at a local clone. Useful for tracking unreleased changes:
+          </p>
+          <CodeBlock
+            code={'dsh plugin --profile web add github:jerryjiao/dsh-ai-study-kit\ndsh plugin --profile web add <local clone directory>'}
+            label="bash"
+            lang="en"
+          />
+
+          <h3>Upgrade</h3>
+          <p>
+            There is no separate update subcommand: just run the install command again, add a version after the package name to pin it if needed, then restart the host. Upgrading the plugin does not touch your study project.
+          </p>
+        </section>
+
+        <section id="structure">
+          <h2>Project structure</h2>
+          <p>
+            A study project is an ordinary directory with just three things: <code class="inline-cmd">examples/</code>,
+            <code class="inline-cmd">progress.json</code>, and <code class="inline-cmd">study/</code>. The plugin does not require you to create it in any fixed location.
+          </p>
+          <CodeBlock code={tree} label="directory tree" copy={false} lang="en" />
+
+          <h3>Files inside examples/&lt;theme&gt;/</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>File</th><th>Purpose</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>questions.json</code></td>
+                  <td>Questions, options, correct answers and explanations; the practice page scores by question id.</td>
+                </tr>
+                <tr>
+                  <td><code>flashcards.json</code></td>
+                  <td>Front and back of each flashcard; spaced-repetition scheduling is recorded in progress.json and never written back here.</td>
+                </tr>
+                <tr>
+                  <td><code>plan.json</code></td>
+                  <td>The study plan: unit order, goals and deadlines; both the home page and the coach read it.</td>
+                </tr>
+                <tr>
+                  <td><code>theme-config.json</code></td>
+                  <td>Topic name, display settings and other metadata.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <code class="inline-cmd">MISSION.md</code> and <code class="inline-cmd">lessons/</code> are optional: if present they show up in the Study Desk and in live tutoring; without them practice and flashcards still work.
+          </p>
+
+          <h3>Your project root is not the bundled kit/</h3>
+          <p>
+            The <code class="inline-cmd">kit/</code> inside the plugin install directory is a snapshot and reference material that the skills read; it is not your study project. Don't write
+            <code class="inline-cmd">progress.json</code> there, and don't edit questions there — it is updated along with the package when you upgrade the plugin. Put your project in any directory; the plugin reads and writes only the one you select.
+          </p>
+        </section>
+
+        <section id="open">
+          <h2>Open the Study Desk</h2>
+          <ol class="doc-list">
+            <li>After restarting the host, a “Study Desk” icon appears in the sidebar; click it to open the home page.</li>
+            <li>The top-right corner of the panel has a project dropdown where you can type a path or pick a recently used project.</li>
+            <li>Whichever directory the project dropdown points at is the one the pages read and write; switching projects just means switching a path.</li>
+          </ol>
+          <p>If you have never picked a project manually, the plugin looks in this order:</p>
+          <ol class="doc-list">
+            <li>the project used last time;</li>
+            <li>the current launch directory (whichever directory DSH was started in);</li>
+            <li><code class="inline-cmd">~/study-kit</code>.</li>
+          </ol>
+          <p>
+            If none of the three matches, the panel asks you to pick a directory. Once you do, it remembers and uses it next time.
+          </p>
+        </section>
+
+        <section id="migrate">
+          <h2>Migrating the old layout</h2>
+          <p>
+            Older versions kept content in directories like <code class="inline-cmd">kit/apps/quiz-app/examples/</code>. The plugin recognizes the old
+            <code class="inline-cmd">kit/apps/quiz-app</code>, <code class="inline-cmd">kit</code> and
+            <code class="inline-cmd">apps/quiz-app</code> layouts, prompts you to migrate, and never modifies the old directory directly.
+          </p>
+          <p>Migration takes four steps, and you can stop after any of them:</p>
+          <ol class="doc-list">
+            <li>Back up the whole old directory (copy it, or commit it to your own git first).</li>
+            <li>Copy <code class="inline-cmd">examples/&lt;theme&gt;/</code> and <code class="inline-cmd">progress.json</code> to the new project root.</li>
+            <li>Verify: question and answer counts match, your answered records are still there, and the Study Desk opens the same question set.</li>
+            <li>Only after confirming all of that, delete the old directory.</li>
+          </ol>
+          <p>
+            Migration does not change question ids, so answered records and flashcard schedules keep working. If unsure, just back up and don't delete — leaving the old directory in place does not affect the new project.
+          </p>
+        </section>
+
+        <section id="skills">
+          <h2>How to use the five skills</h2>
+          <p>
+            Skills are all invoked inside a session: type the slash command, or just describe what you want in natural language. The only difference is that the former is more explicit and the latter more casual.
+          </p>
+
+          <h3><code class="inline-cmd">/ask-coach</code> study coach (main entry point)</h3>
+          <p>
+            Ask it when you don't know what to do next. It scans your progress, wrong answers, due flashcards and exam date, reports a snapshot of where you stand, then names the one thing you should do now and why, and finally walks you through it.
+          </p>
+          <CodeBlock code={'/ask-coach I want to learn git'} label="chat" lang="en" />
+
+          <h3><code class="inline-cmd">/study-coach</code> live tutoring</h3>
+          <p>
+            Sit down and study: it opens with what is most worth practicing today, teaches it piece by piece, quizzes you on the spot after each piece, and if you fail it goes back to shore it up instead of pushing on.
+          </p>
+          <CodeBlock code={'/study-coach continue studying'} label="chat" lang="en" />
+
+          <h3><code class="inline-cmd">/study-doctor</code> health check</h3>
+          <p>
+            Checks the question bank, content alignment and environment configuration in one pass. Anything red is listed in repair order, telling you what to fix first and why.
+          </p>
+          <CodeBlock code={'/study-doctor health check'} label="chat" lang="en" />
+
+          <h3><code class="inline-cmd">/study-recap</code> wrong-question deep dive</h3>
+          <p>
+            It takes your wrong answers from “knowing the answer” to “knowing why it was wrong”, then hands them back to you to redo. Once you have three or more wrong answers, the coach usually suggests a session.
+          </p>
+          <CodeBlock code={'/study-recap wrong-question deep dive'} label="chat" lang="en" />
+
+          <h3><code class="inline-cmd">/study-podcast</code> podcast</h3>
+          <p>
+            Turns lessons you haven't mastered, or a wrong-question deep dive, into a two-host podcast you can listen to on the commute. Generating the podcast calls a model, so that step needs network access and your model configuration.
+          </p>
+          <CodeBlock code={'/study-podcast listen on my commute'} label="chat" lang="en" />
+
+          <p class="docs-note">
+            Learners only need these five commands. Toolchain work such as installing dependencies, running builds and copying files is handled inside the skills; you don't need to remember it.
+          </p>
+        </section>
+
+        <section id="data">
+          <h2>Data &amp; backup</h2>
+          <p>
+            <code class="inline-cmd">progress.json</code> is plain-text JSON that records study state by question id. The main fields:
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Field</th><th>Contents</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>answers</code></td><td>Answer records per question: which options were chosen, whether it was correct, and when.</td></tr>
+                <tr><td><code>srs</code></td><td>Flashcard review schedule: each card's next due time and rating history.</td></tr>
+                <tr><td><code>read</code></td><td>Records of lessons or sections already read.</td></tr>
+                <tr><td><code>settings</code></td><td>Preferences: daily new-card limit, auto-advance, interface language and so on.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            There is also a little metadata, such as the last topic used. Writes follow “read — merge — write a temporary file — rename”, so a write interrupted halfway never leaves half a file; if the file is corrupt the plugin refuses to overwrite it and reports an error instead of quietly clearing it.
+          </p>
+
+          <h3>Backup</h3>
+          <p>
+            Copy the whole project root; the minimum is <code class="inline-cmd">examples/</code> and
+            <code class="inline-cmd">progress.json</code>. <code class="inline-cmd">study/</code> holds study records — copy it too if you want to keep them. Putting the project root in your own git also works; progress is runtime data, so ignore it as you see fit.
+          </p>
+
+          <h3>Moving to another machine</h3>
+          <p>
+            Install the plugin on the new machine, copy in the project root, open the Study Desk and select the directory, and your progress is back. There is no account to log into and no cloud data to restore.
+          </p>
+        </section>
+
+        <section id="privacy">
+          <h2>Privacy</h2>
+          <ul class="doc-list">
+            <li>The Study Desk pages and the plugin host communicate only over the local loopback interface; nothing listens on the LAN or the public internet.</li>
+            <li>No accounts, no telemetry, no cloud sync; the plugin uploads none of your study data to any server.</li>
+            <li>It reads and writes only the project directory you selected, does not scan other directories, and does not touch your notes or other repositories.</li>
+            <li>Only model-dependent actions — generating questions, producing lessons, making podcasts — go over the network, and they use the model you configured yourself.</li>
+            <li>All screenshots on the website and in the docs come from a fictional example project and contain no real user data.</li>
+          </ul>
+        </section>
+
+        <section id="troubleshooting">
+          <h2>Troubleshooting</h2>
+
+          <h3>No Study Desk icon in the sidebar</h3>
+          <p>
+            Most likely the plugin went into the wrong profile, or the host was not restarted after installing. First check in plugin management that the plugin is under the profile you want and that its status is active, then restart DSH.
+          </p>
+
+          <h3>The panel says it can't find a project</h3>
+          <p>
+            Pick a directory in the top-right project dropdown and make sure it contains <code class="inline-cmd">examples/&lt;theme&gt;/</code>. If the lookup order (last project → launch directory →
+            <code class="inline-cmd">~/study-kit</code>) found nothing, selecting once by hand is remembered.
+          </p>
+
+          <h3>Progress is not saved</h3>
+          <p>
+            First check whether the project directory is read-only and whether the current user has write permission; then make sure <code class="inline-cmd">progress.json</code>
+            is not held by another program. If the file's JSON is corrupt, the host reports an error and refuses to overwrite it — fix it, or restore from a backup.
+          </p>
+
+          <h3>Blank page or a missing build output warning</h3>
+          <p>
+            When installing from source, the plugin package has to be built first: run <code class="inline-cmd">npm run build</code> in the plugin repository, then reinstall or restart the host.
+          </p>
+        </section>
+
+        <footer class="docs-foot">
+          <p>
+            Still stuck? Ask in the <a href="https://github.com/jerryjiao/dsh-ai-study-kit/issues">repository Issues</a>, or go back to the home page and read the
+            <a href={`${base}en/#faq`}>FAQ</a>.
+          </p>
+        </footer>
+      </article>
+    </div>
+  </main>
+  <SiteFooter lang="en" />
+</Layout>
+
+<style>
+  .docs-main {
+    padding-block: 48px 64px;
+  }
+
+  .docs-wrap {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 56px;
+    align-items: start;
+  }
+
+  .docs-aside {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px;
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .docs-aside-label {
+    color: var(--fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
+
+  .docs-toc {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .docs-toc a {
+    padding: 6px 8px;
+    border-radius: 8px;
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .docs-toc a:hover {
+    background: var(--surface-2);
+    color: var(--fg);
+  }
+
+  .docs-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 2px solid var(--line);
+    color: var(--fg-muted);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .docs-back svg {
+    transform: rotate(180deg);
+  }
+
+  .docs-head {
+    padding-bottom: 28px;
+    border-bottom: 2px solid var(--line);
+    margin-bottom: 8px;
+  }
+
+  .docs-head h1 {
+    font-size: clamp(1.9rem, 4vw, 2.5rem);
+    margin-bottom: 14px;
+  }
+
+  .docs-lead {
+    color: var(--fg-muted);
+    font-size: 1.05rem;
+    max-width: 68ch;
+  }
+
+  .prose section {
+    padding-top: 32px;
+  }
+
+  .prose h2 {
+    font-size: 1.45rem;
+    margin-bottom: 14px;
+    scroll-margin-top: 24px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .prose h3 {
+    font-size: 1.05rem;
+    margin-top: 26px;
+    margin-bottom: 8px;
+    scroll-margin-top: 24px;
+  }
+
+  .prose p {
+    color: var(--fg-muted);
+    margin-bottom: 12px;
+    max-width: 74ch;
+  }
+
+  .prose p code,
+  .prose li code {
+    font-size: 0.85em;
+  }
+
+  .prose > section :global(.codeblock) {
+    margin-block: 14px;
+  }
+
+  .prose a {
+    color: var(--blue-deep);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .prose a {
+      color: var(--blue);
+    }
+  }
+
+  .docs-note {
+    color: var(--fg-faint) !important;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+
+  .doc-list {
+    margin: 0 0 14px;
+    padding-left: 22px;
+    color: var(--fg-muted);
+    max-width: 74ch;
+  }
+
+  .doc-list li {
+    margin-bottom: 6px;
+  }
+
+  .table-wrap {
+    margin-block: 14px;
+  }
+
+  .docs-foot {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 2px solid var(--line);
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 899px) {
+    .docs-main {
+      padding-block: 24px 40px;
+    }
+
+    .docs-wrap {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .docs-aside {
+      position: static;
+      gap: 10px;
+      padding: 16px;
+    }
+
+    .docs-toc {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .docs-toc a {
+      padding: 4px 10px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-2);
+      font-size: 0.82rem;
+    }
+
+    .docs-back {
+      padding-top: 8px;
+    }
+  }
+</style>

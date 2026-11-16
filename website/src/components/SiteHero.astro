@@ -1,39 +1,44 @@
 ---
 import Icon from './Icon.astro';
 import {
-  CONSOLE_PAGES,
   INSTALL_CMD,
-  PREREQ,
-  SKILLS,
-  VERSION,
   LICENSE,
+  VERSION,
+  getSite,
+  langPath,
+  type Lang,
 } from '../site-data';
 
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'zh' } = Astro.props;
+const s = getSite(lang);
 const base = import.meta.env.BASE_URL;
+const docsHref = langPath(lang, base, 'docs/');
 ---
 
 <section class="hero" id="top">
   <div class="container hero-grid">
     <div class="hero-copy">
-      <p class="kicker">DeepSeek Harness 学习插件</p>
+      <p class="kicker">{s.hero.kicker}</p>
       <h1 class="hero-title">
-        把<span class="hero-accent">学习教练</span><br />装进 DSH
+        {s.hero.titleBefore}<span class="hero-accent">{s.hero.titleAccent}</span><br />{s.hero.titleAfter}
       </h1>
-      <p class="hero-sub">
-        五个学习教练技能 + 一个学习台。题目、闪卡、考点全景和进度，全在你自己的项目目录里。
-      </p>
+      <p class="hero-sub">{s.hero.sub}</p>
 
       <div class="install" id="install">
         <div class="codeblock">
           <div class="codeblock-bar">
             <span class="codeblock-lang">
-              <Icon name="terminal" size={16} /> 终端
+              <Icon name="terminal" size={16} /> {s.hero.terminal}
             </span>
             <button
               class="copy-btn"
               type="button"
               data-copy={INSTALL_CMD}
-              aria-label="复制安装命令"
+              aria-label={s.hero.copyCmd}
             >
               <Icon name="copy" size={16} class="icon-copy" />
               <Icon name="check" size={16} class="icon-check" />
@@ -45,30 +50,30 @@ const base = import.meta.env.BASE_URL;
             <div class="cmd"><span class="prompt">$</span> {INSTALL_CMD}</div>
           </div>
         </div>
-        <p class="note">{PREREQ}</p>
+        <p class="note">{s.meta.prereq}</p>
       </div>
 
       <div class="hero-links">
         <a class="btn btn-primary" href="#quickstart">
-          5 分钟上手 <Icon name="arrow-right" size={16} />
+          {s.hero.ctaPrimary} <Icon name="arrow-right" size={16} />
         </a>
-        <a class="btn btn-ghost" href={`${base}docs/`}>
-          <Icon name="book-open" size={16} /> 安装与用法文档
+        <a class="btn btn-ghost" href={docsHref}>
+          <Icon name="book-open" size={16} /> {s.hero.ctaDocs}
         </a>
       </div>
 
       <p class="hero-meta">
-        v{VERSION} · {LICENSE} 许可 · 无遥测 · 无独立服务器
+        v{VERSION} · {LICENSE} {s.meta.licenseWord} · {s.meta.telemetry} · {s.meta.noServer}
       </p>
     </div>
 
-    <aside class="hero-panel" aria-label="装好后的样子">
-      <p class="panel-label">装好后你会看到</p>
+    <aside class="hero-panel" aria-label={s.hero.panelAria}>
+      <p class="panel-label">{s.hero.panelLabel}</p>
 
       <div class="panel-group">
-        <p class="panel-caption">侧栏 · 学习台</p>
+        <p class="panel-caption">{s.hero.panelCaptionSidebar}</p>
         <ul class="chip-list">
-          {CONSOLE_PAGES.map((page) => (
+          {s.consolePages.map((page) => (
             <li class="chip">
               <Icon name={page.icon} size={16} /> {page.name}
             </li>
@@ -77,17 +82,15 @@ const base = import.meta.env.BASE_URL;
       </div>
 
       <div class="panel-group">
-        <p class="panel-caption">会话 · 五个命令</p>
+        <p class="panel-caption">{s.hero.panelCaptionSession}</p>
         <ul class="chip-list chip-list-mono">
-          {SKILLS.map((skill) => (
+          {s.skills.map((skill) => (
             <li class="chip chip-mono">{skill.cmd}</li>
           ))}
         </ul>
       </div>
 
-      <p class="panel-foot">
-        所有页面都读写你选定的学习项目；换项目就是换一个目录。
-      </p>
+      <p class="panel-foot">{s.hero.panelFoot}</p>
     </aside>
   </div>
 </section>

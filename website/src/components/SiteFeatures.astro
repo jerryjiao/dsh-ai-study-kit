@@ -1,21 +1,26 @@
 ---
 import Icon from './Icon.astro';
-import { CONSOLE_PAGES, SKILLS } from '../site-data';
+import { getSite, type Lang } from '../site-data';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'zh' } = Astro.props;
+const s = getSite(lang);
 ---
 
 <section class="section features" id="capabilities">
   <div class="container">
     <div class="section-head">
-      <p class="kicker">它做什么</p>
-      <h2 class="section-title">一个学习台，五个随叫随到的教练</h2>
-      <p class="section-sub">
-        学习台负责看和练：进度、题目、闪卡、考点全景。技能负责在会话里带你走：下一步做什么、哪里没学透、哪里该回头补。
-      </p>
+      <p class="kicker">{s.features.kicker}</p>
+      <h2 class="section-title">{s.features.title}</h2>
+      <p class="section-sub">{s.features.sub}</p>
     </div>
 
-    <h3 class="group-title">学习台 · 四个页面</h3>
+    <h3 class="group-title">{s.features.groupConsole}</h3>
     <div class="console-grid">
-      {CONSOLE_PAGES.map((page) => (
+      {s.consolePages.map((page) => (
         <article class="console-card">
           <span class="icon-badge icon-badge-blue">
             <Icon name={page.icon} size={20} />
@@ -26,9 +31,9 @@ import { CONSOLE_PAGES, SKILLS } from '../site-data';
       ))}
     </div>
 
-    <h3 class="group-title group-title-spaced">五个技能 · 会话里直接敲</h3>
+    <h3 class="group-title group-title-spaced">{s.features.groupSkills}</h3>
     <ul class="skill-list">
-      {SKILLS.map((skill) => (
+      {s.skills.map((skill) => (
         <li class="skill-row">
           <code class="skill-cmd">{skill.cmd}</code>
           <div class="skill-text">

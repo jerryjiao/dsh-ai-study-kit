@@ -1,66 +1,52 @@
 ---
 import Icon from './Icon.astro';
+import { getSite, type Lang } from '../site-data';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'zh' } = Astro.props;
+const s = getSite(lang);
 ---
 
 <section class="section architecture" id="architecture">
   <div class="container">
     <div class="section-head">
-      <p class="kicker">架构</p>
-      <h2 class="section-title">页面在 DSH 里，数据在你项目里</h2>
-      <p class="section-sub">
-        没有中间服务器，也没有需要同步的云端。页面、通道、宿主、项目，四段链路都在本机完成。
-      </p>
+      <p class="kicker">{s.architecture.kicker}</p>
+      <h2 class="section-title">{s.architecture.title}</h2>
+      <p class="section-sub">{s.architecture.sub}</p>
     </div>
 
-    <div
-      class="arch"
-      role="img"
-      aria-label="DSH 学习台页面经本机回环 RPC 通道交给插件宿主半边，宿主读写你的学习项目目录"
-    >
-      <div class="arch-box arch-box-blue">
-        <span class="arch-kicker">DSH 内</span>
-        <strong>学习台页面</strong>
-        <span class="arch-sub">首页 · 答题 · 闪卡 · 全景</span>
-      </div>
-      <div class="arch-link"><span>⇄</span><small>RPC<br />请求</small></div>
-      <div class="arch-box arch-box-plain">
-        <span class="arch-kicker">本机回环</span>
-        <strong>RPC 通道</strong>
-        <span class="arch-sub">loopback · 请求/响应</span>
-      </div>
-      <div class="arch-link"><span>⇄</span><small>分发</small></div>
-      <div class="arch-box arch-box-green">
-        <span class="arch-kicker">插件</span>
-        <strong>宿主半边</strong>
-        <span class="arch-sub">读写项目 · 注册技能</span>
-      </div>
-      <div class="arch-link"><span>⇄</span><small>fs / path</small></div>
-      <div class="arch-box arch-box-gold">
-        <span class="arch-kicker">你的磁盘</span>
-        <strong>学习项目目录</strong>
-        <span class="arch-sub">examples/ · progress.json · study/</span>
-      </div>
+    <div class="arch" role="img" aria-label={s.architecture.aria}>
+      {s.architecture.items.map((item) =>
+        item.kind === 'box' ? (
+          <div class:list={['arch-box', `arch-box-${item.tone}`]}>
+            <span class="arch-kicker">{item.kicker}</span>
+            <strong>{item.title}</strong>
+            <span class="arch-sub">{item.sub}</span>
+          </div>
+        ) : (
+          <div class="arch-link">
+            <span>⇄</span>
+            <small set:html={item.lines.join('<br />')} />
+          </div>
+        ),
+      )}
     </div>
 
     <details class="arch-more">
       <summary>
         <span class="faq-chev"><Icon name="chevron-down" size={18} /></span>
-        展开：技能注册、服务器与旧网页版
+        {s.architecture.moreSummary}
       </summary>
       <div class="arch-more-body">
-        <h3>技能怎么注册进来</h3>
-        <p>
-          五个技能随插件一起注册进 DSH。你在会话里敲 <code class="inline-cmd">/ask-coach</code>
-          或者直接说「我想学 XX」，DSH 就会把请求交给对应技能；技能通过宿主暴露的读写能力操作学习项目，不自己起后台进程。
-        </p>
-        <h3>为什么没有独立服务器</h3>
-        <p>
-          学习台页面由 DSH 直接加载，数据经本机回环 RPC 取。旧版需要自己启动网页服务、记端口、开浏览器；现在装完插件、重启宿主就能用。
-        </p>
-        <h3>和旧网页版的关系</h3>
-        <p>
-          同一套学习台页面和数据格式搬进了 DSH，题目、闪卡、全景的读写方式没有变。旧的独立答题站源码仍留在插件包里，供需要单独部署的人使用；日常学习不再需要它。
-        </p>
+        {s.architecture.details.map((detail) => (
+          <Fragment>
+            <h3>{detail.title}</h3>
+            <p>{detail.body}</p>
+          </Fragment>
+        ))}
       </div>
     </details>
   </div>

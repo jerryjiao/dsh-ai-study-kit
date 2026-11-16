@@ -1,8 +1,16 @@
 ---
 import GithubMark from './GithubMark.astro';
-import { LICENSE, PRODUCT, REPO_URL, VERSION } from '../site-data';
+import { LICENSE, PRODUCT, REPO_URL, VERSION, getSite, langPath, type Lang } from '../site-data';
 
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'zh' } = Astro.props;
+const s = getSite(lang);
 const base = import.meta.env.BASE_URL;
+const docsHref = langPath(lang, base, 'docs/');
+const changelogHref = langPath(lang, base, 'changelog/');
 const year = new Date().getFullYear();
 ---
 
@@ -13,16 +21,16 @@ const year = new Date().getFullYear();
         <img src={`${base}mark-1024.png`} alt="" width="28" height="28" />
         {PRODUCT}
       </a>
-      <p class="footer-note">把学习教练装进 DeepSeek Harness。</p>
+      <p class="footer-note">{s.footer.note}</p>
     </div>
 
-    <nav class="footer-links" aria-label="页脚">
+    <nav class="footer-links" aria-label={s.footer.ariaNav}>
       <a href={REPO_URL}>
-        <GithubMark size={16} /> GitHub 仓库
+        <GithubMark size={16} /> {s.footer.repo}
       </a>
-      <a href={`${base}docs/`}>文档</a>
-      <a href={`${base}changelog/`}>更新日志</a>
-      <a href={`${REPO_URL}/blob/main/LICENSE`}>MIT 许可证</a>
+      <a href={docsHref}>{s.footer.docs}</a>
+      <a href={changelogHref}>{s.footer.changelog}</a>
+      <a href={`${REPO_URL}/blob/main/LICENSE`}>{s.footer.license}</a>
     </nav>
 
     <div class="footer-meta">

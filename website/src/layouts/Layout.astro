@@ -1,26 +1,31 @@
 ---
 import '../styles/site.css';
+import { alternatePath, getSite, type Lang } from '../site-data';
 
 interface Props {
   title?: string;
   description?: string;
+  lang?: Lang;
 }
 
 const base = import.meta.env.BASE_URL; // '/dsh-ai-study-kit/'
 const siteUrl = import.meta.env.SITE; // 'https://jerryjiao.github.io'
 const siteName = 'AI Study Kit';
 
-const {
-  title = 'AI Study Kit — 把学习教练装进 DSH：题目、闪卡、进度都在本机',
-  description = 'DeepSeek Harness（DSH）学习教练插件：五个学习教练技能 + 一个集成学习台。题目、闪卡、考点全景和进度都在你的项目目录里，数据不出本机。',
-} = Astro.props;
+const { lang = 'zh' } = Astro.props;
+const s = getSite(lang);
+
+const { title = s.layout.title, description = s.layout.description } = Astro.props;
 
 const ogImage = `${siteUrl}${base}mark-1024.png`;
 const canonical = new URL(Astro.url.pathname, siteUrl).href;
+const alternate = new URL(alternatePath(lang, Astro.url.pathname, base), siteUrl).href;
+const ogLocale = lang === 'zh' ? 'zh_CN' : 'en_US';
+const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang={htmlLang} data-copied={s.layout.copied}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -28,6 +33,7 @@ const canonical = new URL(Astro.url.pathname, siteUrl).href;
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang={lang === 'zh' ? 'en' : 'zh-CN'} href={alternate} />
     <link rel="icon" type="image/png" href={`${base}favicon.png`} />
     <link rel="apple-touch-icon" href={`${base}mark-1024.png`} />
     <meta
@@ -46,22 +52,22 @@ const canonical = new URL(Astro.url.pathname, siteUrl).href;
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
-    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale" content={ogLocale} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
   </head>
   <body>
-    <a class="skip-link" href="#main">跳到主要内容</a>
+    <a class="skip-link" href="#main">{s.layout.skip}</a>
     <slot />
     <script is:inline>
-      /* 全站唯一 JS：安装命令一键复制（零依赖，失败回落 execCommand） */
+      /* The site's only JS: one-click copy for install commands (zero deps, execCommand fallback). */
       (function () {
         function ok(b) {
           b.classList.add('is-copied');
           var s = b.querySelector('.copy-status');
-          if (s) s.textContent = '已复制';
+          if (s) s.textContent = document.documentElement.dataset.copied || '已复制';
           clearTimeout(b._t);
           b._t = setTimeout(function () {
             b.classList.remove('is-copied');

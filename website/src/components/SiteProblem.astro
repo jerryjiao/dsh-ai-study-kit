@@ -1,20 +1,25 @@
 ---
 import Icon from './Icon.astro';
-import { PROBLEMS } from '../site-data';
+import { getSite, type Lang } from '../site-data';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'zh' } = Astro.props;
+const s = getSite(lang);
 ---
 
 <section class="section problem" id="why">
   <div class="container">
     <div class="section-head">
-      <p class="kicker">它解决什么</p>
-      <h2 class="section-title">学习卡住的地方，不是不够努力</h2>
-      <p class="section-sub">
-        三件最常见的事：学了记不住、内容跟练习对不上、换个工具进度就没了。学习台和五个技能就是对着这三件事做的。
-      </p>
+      <p class="kicker">{s.problem.kicker}</p>
+      <h2 class="section-title">{s.problem.title}</h2>
+      <p class="section-sub">{s.problem.sub}</p>
     </div>
 
     <div class="grid-3">
-      {PROBLEMS.map((item, i) => (
+      {s.problem.items.map((item, i) => (
         <article class="problem-card">
           <div class="problem-top">
             <span class="icon-badge icon-badge-green">

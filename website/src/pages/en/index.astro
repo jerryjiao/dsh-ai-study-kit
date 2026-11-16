@@ -1,0 +1,32 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SiteNav from '../../components/SiteNav.astro';
+import SiteHero from '../../components/SiteHero.astro';
+import SiteProblem from '../../components/SiteProblem.astro';
+import SiteFeatures from '../../components/SiteFeatures.astro';
+import SiteQuickstart from '../../components/SiteQuickstart.astro';
+import SiteShots from '../../components/SiteShots.astro';
+import SiteSafety from '../../components/SiteSafety.astro';
+import SiteArchitecture from '../../components/SiteArchitecture.astro';
+import SiteFaq from '../../components/SiteFaq.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+
+const title = 'AI Study Kit · Put a study coach inside DSH';
+const description =
+  'DeepSeek Harness study plugin: five coaching skills plus one study desk. Questions, flashcards, the exam-point panorama, and progress all read and write your own project folder.';
+---
+
+<Layout lang="en" title={title} description={description}>
+  <SiteNav lang="en" />
+  <main id="main">
+    <SiteHero lang="en" />
+    <SiteProblem lang="en" />
+    <SiteFeatures lang="en" />
+    <SiteQuickstart lang="en" />
+    <SiteShots lang="en" />
+    <SiteSafety lang="en" />
+    <SiteArchitecture lang="en" />
+    <SiteFaq lang="en" />
+  </main>
+  <SiteFooter lang="en" />
+</Layout>

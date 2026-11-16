@@ -1,0 +1,157 @@
+---
+import { REPO_URL, VERSION, getSite, type Lang } from '../site-data';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'zh' } = Astro.props;
+const s = getSite(lang);
+const c = s.changelog;
+const changelogUrl = `${REPO_URL}/blob/main/CHANGELOG.md`;
+---
+
+<main id="main" class="changelog-main">
+  <div class="container changelog-wrap">
+    <header class="changelog-head">
+      <p class="kicker">{c.kicker}</p>
+      <h1>{c.heading}</h1>
+      <p class="changelog-lead">
+        {c.leadBefore}<strong>v{VERSION}</strong>{c.leadMid}
+        <a href={changelogUrl}>{c.leadLink}</a>{c.leadAfter}
+      </p>
+    </header>
+
+    <ol class="release-list">
+      {c.releases.map((release) => (
+        <li class="release">
+          <div class="release-side">
+            <span class="release-version">v{release.version}</span>
+            <time class="release-date" datetime={release.date}>{release.date}</time>
+          </div>
+          <div class="release-body">
+            <h2 class="release-title">{release.title}</h2>
+            <ul class="release-points">
+              {release.points.map((point) => (
+                <li>{point}</li>
+              ))}
+            </ul>
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <p class="changelog-note">{c.note}</p>
+  </div>
+</main>
+
+<style>
+  .changelog-main {
+    padding-block: 56px 72px;
+  }
+
+  .changelog-wrap {
+    max-width: 860px;
+  }
+
+  .changelog-head {
+    padding-bottom: 28px;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .changelog-head h1 {
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    margin-bottom: 14px;
+  }
+
+  .changelog-lead {
+    color: var(--fg-muted);
+    max-width: 66ch;
+  }
+
+  .changelog-lead a,
+  .changelog-note a {
+    color: var(--blue-deep);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  .release-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .release {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 28px;
+    padding-block: 32px;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .release-side {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .release-version {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .release-date {
+    color: var(--fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .release-title {
+    font-size: 1.15rem;
+    margin-bottom: 10px;
+  }
+
+  .release-points {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--fg-muted);
+    font-size: 0.95rem;
+  }
+
+  .release-points li {
+    margin-bottom: 6px;
+  }
+
+  .changelog-note {
+    margin-top: 28px;
+    color: var(--fg-faint);
+    font-size: 0.85rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .changelog-lead a,
+    .changelog-note a {
+      color: var(--blue);
+    }
+  }
+
+  @media (max-width: 899px) {
+    .changelog-main {
+      padding-block: 32px 48px;
+    }
+
+    .release {
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding-block: 24px;
+    }
+
+    .release-side {
+      flex-direction: row;
+      align-items: baseline;
+      gap: 12px;
+    }
+  }
+</style>

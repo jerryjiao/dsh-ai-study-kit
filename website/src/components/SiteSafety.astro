@@ -1,20 +1,25 @@
 ---
 import Icon from './Icon.astro';
-import { SAFETY } from '../site-data';
+import { getSite, type Lang } from '../site-data';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'zh' } = Astro.props;
+const s = getSite(lang);
 ---
 
 <section class="section safety" id="safety">
   <div class="container">
     <div class="section-head">
-      <p class="kicker">安全与隐私</p>
-      <h2 class="section-title">你的学习数据，一直是你自己的文件</h2>
-      <p class="section-sub">
-        插件没有账号系统、没有服务端数据库。它做的事只有一件：读写你选定的那个学习项目目录。
-      </p>
+      <p class="kicker">{s.safety.kicker}</p>
+      <h2 class="section-title">{s.safety.title}</h2>
+      <p class="section-sub">{s.safety.sub}</p>
     </div>
 
     <div class="grid-4">
-      {SAFETY.map((item) => (
+      {s.safety.items.map((item) => (
         <article class="card">
           <span class="icon-badge icon-badge-green">
             <Icon name={item.icon} size={20} />

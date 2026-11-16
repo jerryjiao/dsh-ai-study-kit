@@ -1,0 +1,15 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SiteNav from '../../components/SiteNav.astro';
+import SiteChangelog from '../../components/SiteChangelog.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import { getSite } from '../../site-data';
+
+const s = getSite('en');
+---
+
+<Layout lang="en" title={s.changelog.title} description={s.changelog.description}>
+  <SiteNav lang="en" />
+  <SiteChangelog lang="en" />
+  <SiteFooter lang="en" />
+</Layout>

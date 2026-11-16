@@ -6,7 +6,16 @@
 
 ## [Unreleased]
 
-（暂无——下一版攒票中。）
+### Added
+
+- **官网与 README 支持英文**：Astro 官网新增 `/en/`、`/en/docs/`、`/en/changelog/` 三页，中英页面顶部可互相切换（`hreflang` 与 `og:locale` 同步）；仓库新增 `README.en.md`，与中文 README 顶部互链。文案集中在 `website/src/site-content.ts`，中英两套数据驱动同一批组件。
+
+### 升级与存量影响
+
+- **新文件/新契约**：官网新增 `website/src/pages/en/**`、`website/src/site-content.ts`、`website/src/components/SiteChangelog.astro`；仓库根新增 `README.en.md`。插件本体、面板、数据契约、`progress.json` 格式均未改动。
+- **老项目缺了会怎样**：无影响——英文页面与英文 README 只是文档，插件运行不依赖它们；中文路径 `/`、`/docs/`、`/changelog/` 保持原样，旧链接不失效。
+- **怎么补**：无需补。想要英文入口就用 `/en/`，或直接看 `README.en.md`。
+- **是否破坏性**：非破坏。
 
 ## [0.2.0] — 2026-11-16
 
@@ -18,7 +27,7 @@
 - **四页 UI + 顶部二级 tab**：首页（统计 / 继续上次 / 错题重练 / 随机 10 题 / 按主题闯关）、答题（单选 / 多选 / 判断，当场判分）、闪卡（间隔重复排队，翻面评分）、全景（四态着色 + 下一站推荐）。中英双语（en / zh），右上角切换并记住选择。
 - **直读 examples 源 JSON（ADR 0002）**：`src/host/study/content.js` 直接从 `<项目根>/examples/<slug>/` 读 questions / flashcards / course-spec / theme-config，不读构建产物、不需要 sync 步骤，装完即用；路径校验拒绝逃出 `examples/`。
 - **progress.json 原子写回**：`src/host/study/progress.js` read-merge-write + tmp + rename；文件损坏 / 形状非法时拒写并返回 `EPROGRESS_CORRUPT`，不静默重置学习者数据。
-- **项目探测（ADR 0003）**：探测顺序 cwd → 上次记住的路径 → `~/study-kit` → 目录选择器；识别旧 `kit/apps/quiz-app/examples` 与 `kit/examples` 布局并提示迁移（只读识别，不自动搬）。
+- **项目探测（ADR 0003）**：探测顺序 上次记住的路径 → cwd → `~/study-kit` → 目录选择器；识别旧 `kit/apps/quiz-app/examples` 与 `kit/examples` 布局并提示迁移（只读识别，不自动搬）。
 - **免服务运行（ADR 0004）**：移除 `:8787` Hono 服务 / `pnpm dev` / pm2 依赖，页面与宿主经本机回环 RPC 通信；保留 `scan` / `test` / `build` / `check:alignment` 脚本。
 - **官网与截图（ADR 0005）**：Astro 多页官网（首页 / 文档 / 更新日志）+ 5 张真实 DSH 截图（虚构示例项目 + 临时 `DSH_HOME`，Playwright 1440×900 dpr2 全页 PNG）。
 - **测试**：`npm test` 22 项（21 通过 / 1 跳过），覆盖槽注册、四页渲染、双语资源、examples 读取、进度合并与损坏拒写。

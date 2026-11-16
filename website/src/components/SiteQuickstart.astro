@@ -1,22 +1,26 @@
 ---
 import Icon from './Icon.astro';
-import { STEPS } from '../site-data';
+import { getSite, type Lang } from '../site-data';
 
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'zh' } = Astro.props;
+const s = getSite(lang);
 const base = import.meta.env.BASE_URL;
 ---
 
 <section class="section quickstart" id="quickstart">
   <div class="container">
     <div class="section-head">
-      <p class="kicker">5 分钟上手</p>
-      <h2 class="section-title">三步，从安装到第一道题</h2>
-      <p class="section-sub">
-        不用起服务、不用配端口。装插件、让教练建一个学习项目，然后打开侧栏的学习台。
-      </p>
+      <p class="kicker">{s.quickstart.kicker}</p>
+      <h2 class="section-title">{s.quickstart.title}</h2>
+      <p class="section-sub">{s.quickstart.sub}</p>
     </div>
 
     <ol class="step-list">
-      {STEPS.map((step) => (
+      {s.quickstart.steps.map((step) => (
         <li class="step">
           <span class="step-num">{step.num}</span>
           <div class="step-body">

@@ -1,13 +1,16 @@
 ---
 import Icon from './Icon.astro';
+import { getSite, type Lang } from '../site-data';
 
 interface Props {
   code: string;
   label?: string;
   copy?: boolean;
+  lang?: Lang;
 }
 
-const { code, label = 'bash', copy = true } = Astro.props;
+const { code, label = 'bash', copy = true, lang = 'zh' } = Astro.props;
+const s = getSite(lang);
 ---
 
 <div class="codeblock">
@@ -20,7 +23,7 @@ const { code, label = 'bash', copy = true } = Astro.props;
         class="copy-btn"
         type="button"
         data-copy={code}
-        aria-label="复制代码"
+        aria-label={s.codeblock.copy}
       >
         <Icon name="copy" size={16} class="icon-copy" />
         <Icon name="check" size={16} class="icon-check" />

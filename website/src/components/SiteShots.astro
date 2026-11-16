@@ -1,21 +1,25 @@
 ---
-import { SHOTS } from '../site-data';
+import { getSite, type Lang } from '../site-data';
 
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'zh' } = Astro.props;
+const s = getSite(lang);
 const base = import.meta.env.BASE_URL;
 ---
 
 <section class="section shots" id="shots">
   <div class="container">
     <div class="section-head">
-      <p class="kicker">截图</p>
-      <h2 class="section-title">学习台长什么样</h2>
-      <p class="section-sub">
-        四个页面，加一张深色模式。截图都来自虚构的示例学习项目，不含任何真实用户数据。
-      </p>
+      <p class="kicker">{s.shots.kicker}</p>
+      <h2 class="section-title">{s.shots.title}</h2>
+      <p class="section-sub">{s.shots.sub}</p>
     </div>
 
     <div class="shot-grid">
-      {SHOTS.map((shot, i) => (
+      {s.shots.items.map((shot, i) => (
         <figure class:list={['shot', { 'shot-wide': i === 0 }]}>
           <div class="shot-frame">
             <img
