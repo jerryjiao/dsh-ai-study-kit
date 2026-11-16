@@ -1,0 +1,330 @@
+/**
+ * zh.ts — 中文 UI 文案（基准词典）。
+ *
+ * 约定：
+ * - key 用扁平的点分命名（页面/组件.用途），新增文案先加到这里；
+ * - 占位符写 {name}，t() 里做字符串替换；
+ * - en/es/ru/ja 以 `Record<TKey, string>` 引用本文件的 key 集合——漏翻译会直接编译报错；
+ * - i18n.test.ts 会再校验 key 完整性与占位符一致性。
+ */
+export const zh = {
+  // 全局
+  'app.title': 'AI Study Kit · 学习练习站',
+  'app.loading': '加载进度中…',
+
+  // 顶栏
+  'nav.home': '首页',
+  'nav.flashcards': '闪卡',
+  'nav.courses': '课程',
+  'nav.panorama': '全景',
+  'nav.backHome': '返回首页',
+
+  // 首页
+  'home.heroTitle': '继续，今天也要过关',
+  'home.tagline': '学习练习站 · 共 {total} 题 · 进度自动跨设备同步',
+  // 本地模式（无后端，如官网 demo）下的 tagline：与 sync.local 横幅一致，不宣称同步
+  'home.taglineLocal': '学习练习站 · 共 {total} 题 · 进度保存在此浏览器',
+  'home.statAnswered': '已答',
+  'home.statAccuracy': '正确率',
+  'home.statWrong': '错题',
+  'home.statRead': '已看',
+  'home.resumeCta': '继续上次',
+  'home.wrongRetry': '错题重练（{n}）',
+  'home.random20': '随机 {n} 题',
+  'home.byTopic': '按主题闯关',
+  'home.nowTag': '在学',
+  'home.qUnit': '题',
+  'home.extTag': '拓展 {n}',
+  'home.uncategorized': '(未分类)',
+
+  // 首页·学习计划面板（仅当激活主题有 plan.json 时渲染；判据 src/lib/plan.ts，
+  // 与 scripts/lib/plan.mjs 双实现同步。降级路径文案（无日程/速率不足/无接触）同四语）
+  'home.planTitle': '学习计划',
+  'home.planDone': '完成 {done}/{total}',
+  'home.planDeadlineIn': '距 deadline 还有 {n} 天',
+  'home.planDeadlineToday': 'deadline 就是今天',
+  'home.planDeadlineOver': 'deadline 已过 {n} 天',
+  'home.planPace': '节奏',
+  'home.planRescheduled': '已重排：下一站「{unit}」，{date}',
+  'home.planSlack': '富余 {n} 天',
+  'home.planDueToday': '下一单元今天到期',
+  'home.planCleared': '日程已全部完成',
+  'home.planNoCalendar': '计划无日程日期，节奏对照不可算',
+  'home.planProjection': '按近 {window} 天速率，预计 {date} 完成',
+  'home.planProjSlack': '比 deadline 富余 {n} 天',
+  'home.planProjDeficit': '比 deadline 缺口 {n} 天',
+  'home.planProjNoData': '近 {window} 天无完成记录，速率不足，不硬算外推',
+  'home.planProjComplete': '全部单元已完成',
+  'home.planGap': '距上次学习 {n} 天',
+  'home.planNoContact': '尚无学习接触记录',
+  // 今日触达（#123 微块轻启动）：四通道任一今天有接触即亮（含微块口述）——钩子式正反馈
+  'home.todayTouched': '今天已触达',
+  // 断档回归卡（#120，spec #118 T1）：热身一题 + 可重排建议（#125：升级为可执行重排——
+  // 执行入口是教练侧计划生成器，web 只指路；确认后写回 = 可否决）
+  'home.welcomeBack': '欢迎回来',
+  'home.warmupCta': '热身一题 · {name}',
+  'home.warmupCtaPlain': '热身一题',
+  'home.warmupHintSchedule': '日程落下的考点，先做一题找回手感',
+  'home.warmupHintWeak': '最薄弱的考点，先做一题找回手感',
+  'home.warmupHintNext': '下一站考点，先做一题找回手感',
+  'home.shiftAdviceDeadline': '按你的实测速率（近 {window} 天约 {pace} 天/单元），剩余 {n} 个单元约需 {days} 天——可重排：下次见教练确认后，把日程整体后移 {shift} 天',
+  'home.shiftAdviceNoDeadline': '按你的实测速率（近 {window} 天约 {pace} 天/单元），剩余 {n} 个单元约需 {days} 天——可重排：下次见教练确认后，把日程整体后移 {shift} 天',
+  'home.planRemaining': '剩余 {n} 单元',
+  'home.planStatusInProgress': '在学',
+  'home.planStatusPaused': '搁置',
+
+  // 考点全景独立页（v0.25 票⑤重做：整纲构成条 + 大类糖果节点路径 + 节点详情轨迹弹层，
+  // 判据见 src/lib/panorama.ts 与 mastery 同口径；轨迹派生 src/lib/panoramaTrace.ts）
+  'panorama.title': '全景',
+  'panorama.taught': '讲',
+  'panorama.practiced': '练',
+  'panorama.mastered': '掌',
+  'panorama.answered': '答 {answered}/{total}',
+  'panorama.oral': '口头 {correct}/{asked}',
+  'panorama.stale': '「讲过」信号截至上次构建；答题与口述实时（无实时口述的考点回退上次构建）。',
+  'panorama.graphHint': '连线来自知识图谱投影：实线箭头=前置（先学），虚线=关联；节点=掌握四态。',
+  'panorama.stateMastered': '已掌握',
+  'panorama.stateInProgress': '在学',
+  'panorama.stateWeak': '薄弱',
+  'panorama.stateUntouched': '未接触',
+  'panorama.totalPoints': '共 {n} 考点',
+  'panorama.knowflowLabel': '前置关系连线',
+  'panorama.byTopic': '按大类看考点',
+  'panorama.byTopicHint': '一个节点 = 一个考点 · 点节点看轨迹 / 直达题集',
+  'panorama.topicMasteredPrefix': '已掌握',
+  'panorama.topicEpUnit': '考点',
+  'panorama.noEp': '当前题库没有考点标记（examPoint），无法派生掌握度。',
+  'panorama.filterAll': '全部',
+  'panorama.filterWeak': '只看薄弱',
+  'panorama.filterUnmastered': '只看未掌握',
+  'panorama.filterAria': '考点筛选',
+  'panorama.sheetClose': '关闭',
+  'panorama.sheetPractice': '去刷这考点的题',
+  'panorama.sheetCourse': '看课程',
+  'panorama.statWrongTimes': '错 {n} 次',
+  'panorama.statFlash': '闪卡 {graduated}/{mapped} 毕业',
+  'panorama.timelineTitle': '学习轨迹',
+  'panorama.timelineEmpty': '还没有学习痕迹——从下方开始这个考点',
+  'panorama.tlToday': '今天',
+  'panorama.tlFirst': '首次接触',
+  'panorama.tlCorrect': '答对',
+  'panorama.tlWrong': '答错',
+  'panorama.tlWrongRun': '连错 {n} 题',
+  'panorama.tlOralCorrect': '口述答对',
+  'panorama.tlOralWrong': '口述答错',
+  'panorama.tlFlash': '闪卡毕业',
+  'panorama.tlMastered': '考点掌握',
+  'panorama.tlMasteredSub': '题全对 + 无未毕业错题',
+
+  // 全景页·计划摘要行（#93 保留；仅当激活主题有 plan.json 时渲染。计划 day chips 已撤出
+  // 本页——spec #110 Q3，完整计划面板在首页。判据 src/lib/plan.ts；节奏措辞复用 home.plan*）
+  'panorama.planDone': '计划：完成 {done}/{total}',
+
+  // 全景页·下一站推荐卡（v0.25 票⑥，spec #110「A · 顶部推荐卡」）：主推理由（补弱带拖住
+  // 下游/前置已解锁/落后日程——落后日程仅当主题设了目标日）+ 次选链接 + 绿按钮直达题集
+  'panorama.nextLabel': '下一站',
+  'panorama.nextGoWeak': '去补这一课',
+  'panorama.nextGo': '去学这一课',
+  'panorama.nextWhyWeak': '有 {n} 道未毕业错题',
+  'panorama.nextWhyWeakBlocks': '有 {n} 道未毕业错题，拖住了 {m} 个下游考点（{names}）',
+  'panorama.nextWhyUnlocked': '前置已全部解锁，结构上的下一站',
+  'panorama.nextWhySchedule': '按排布表顺推的下一站',
+  'panorama.nextWhyBehind': '日程已落后 {n} 天（目标日 {date}）',
+  'panorama.nextAltWeakPref': '不想补弱？按结构顺推 →',
+  'panorama.nextAltWeakPrefSched': '不想补弱？按排布表顺推 →',
+  'panorama.nextAltGenPref': '换个优先级 →',
+  'panorama.nextAltAfter': '接下来 →',
+  'panorama.nextAltUnlocked': '{name} · 前置已解锁',
+  'panorama.nextAltNext': '{name} · 排布表下一项',
+  'panorama.nextAltWeak': '{name} · 薄弱',
+
+  // 全景页·赶考细引用（票⑥：仅当主题设了目标日才渲染，点达首页完整计划面板——完整面板
+  // 仍只在首页；无目标日零催办原则下这行不存在。速率不足诚实降级为目标日倒计时）
+  'panorama.paceProj': '按当前节奏预计 {date} 完成',
+  'panorama.paceProjSlack': '比目标富余 {n} 天',
+  'panorama.paceProjDeficit': '距目标差 {n} 天',
+  'panorama.paceDeadlineIn': '距目标日还有 {n} 天',
+  'panorama.paceDeadlineToday': '目标日就是今天',
+  'panorama.paceDeadlineOver': '目标日已过 {n} 天',
+  'panorama.paceAria': '查看首页完整学习计划',
+
+  // 练习页
+  'practice.readMode': '看题模式',
+  'practice.layerAll': '全部',
+  'practice.redoSet': '重做本题集',
+  'practice.redoSetTitle': '清空本题集答题记录，重新作答',
+  'practice.jumpUnanswered': '跳到未答',
+  'practice.jumpUnansweredTitle': '跳到本题集第一道未答题',
+  'practice.rereadSet': '重看本题集',
+  'practice.rereadSetTitle': '清空本题集看题进度，重新看题',
+  'practice.viewPractice': '答题',
+  'practice.viewRead': '看题',
+  'practice.mastered': '已掌握 {n}',
+  'practice.readCount': '已看 {n}',
+  'practice.answeredCount': '已答 {n}',
+  'practice.noWrong': '暂无错题，去做几道题吧！',
+  'practice.noQuestionsScope': '「{name}」暂无题目。',
+  'practice.noQuestions': '没有题目。',
+  'practice.backHome': '返回首页',
+  'practice.prev': '上一题',
+  'practice.next': '下一题',
+  'practice.finish': '完成答题',
+  'practice.backToFirst': '回到第一题',
+  'practice.nextSet': '下一题集：{label}',
+  'practice.stayHere': '留在这里（关闭）',
+  'practice.keepReading': '继续看题（关闭）',
+  'practice.labelWrong': '错题集',
+  'practice.labelSequential': '顺序练习',
+  'practice.labelQuoted': '「{name}」',
+  'practice.confirmRedo': '重置{label}的答题记录？（{n} 题，含对错与错题进度，不可恢复。不影响其他主题与闪卡。）',
+  'practice.confirmReread': '重看{label}？（{n} 题，清除本题集看题进度，不可恢复。不影响其他主题与答题记录。）',
+  'practice.summaryAria': '答题总结',
+
+  // 题目卡
+  'q.multi': '多选题',
+  'q.judge': '判断题',
+  'q.single': '单选题',
+  'q.difficulty': '难度 {level}',
+  'q.index': '第 {n} 题',
+  'q.imageAlt': '题目配图',
+  'q.submitSelfEval': '提交（自评）',
+  'q.submit': '提交答案',
+  'q.correct': '回答正确',
+  'q.wrong': '回答错误，正确答案：{answer}',
+  'q.wrongCountHistory': '· 历史错 {n} 次',
+  'q.wrongCountTotal': '· 累计错 {n} 次',
+  'q.streakProgress': '连对 {streak}/{needed}，再答对 {left} 次自动移出错题集',
+  'q.streakLabel': '错题连对进度',
+  'q.mastered': '已掌握，移出错题集',
+  'q.dismiss': '移出',
+  'q.dismissTitle': '手动移出错题集（不再循环出现）',
+  'q.confirmDismiss': '把这题移出错题集？',
+  'q.selfEvalNote': '自评题（原图无标准答案）',
+  'q.analysis': '解析：',
+  'opt.correctAnswer': '正确答案',
+  'opt.wrongAnswer': '错选的选项',
+
+  // 确认弹窗
+  'confirm.cancel': '取消',
+  'confirm.ok': '确定',
+  'confirm.aria': '确认操作',
+
+  // SRS 评分
+  'srs.again': '重学',
+  'srs.hard': '困难',
+  'srs.good': '良好',
+  'srs.easy': '简单',
+  'srs.aria': '评分',
+
+  // 答题总结
+  'summary.tierGood': '掌握得不错',
+  'summary.tierOk': '继续巩固',
+  'summary.tierLow': '多练几轮',
+  'summary.title': '答题完成 · {title}',
+  'summary.answered': '已答',
+  'summary.correctCount': '答对',
+  'summary.wrongCount': '答错',
+  'summary.selfRated': '含 {n} 道自评题（不计入正确率）',
+  'summary.totalNote': '共 {n} 题 · 该主题累计正确率',
+  'summary.nextHook': '下次：{name} 口述 3 题 · 约 {minutes} 分钟',
+  'summary.backHome': '返回首页',
+  'summary.redo': '重做本题集',
+
+  // 闪卡复习流程
+  'fc.extraDone': '额外练习完成!',
+  'fc.extraDoneNote': '本轮又过了 {n} 张，评分已记录',
+  'fc.back': '返回闪卡',
+  'fc.todayDone': '今日复习完成!',
+  'fc.todayDoneNote': '今天复习了 {n} 张',
+  'fc.streak': '连续坚持 {n} 天',
+  'fc.nextDue': '下一张卡约 {interval}后到期',
+  'fc.learningLaterToday': '还有 {n} 张学习卡今天晚些时候到期，到时可继续刷',
+  'fc.extraRound': '再练一轮（额外复习，不更新连续天数）',
+  'fc.new': '新卡',
+  'fc.learning': '学习中',
+  'fc.review': '待复习',
+  'fc.includesRelearn': '· 含 {n} 张重学',
+  'fc.extraTag': '· 额外练习',
+  'fc.phaseNew': '新卡',
+  'fc.phaseLearning': '学习步 {cur}/{total}·{step}m',
+  'fc.phaseRelearning': '重学·{step}m',
+  'fc.phaseReview': '复习',
+  'fc.hintFlip': '点击卡片或空格翻面',
+  'fc.hintRate': '选下方评分（或按 1-4）',
+  'fc.showAnswer': '显示答案',
+
+  // 闪卡 dashboard
+  'fch.title': '闪卡复习',
+  'fch.tagline': '间隔重复 · 科学抗遗忘 · 共 {n} 张',
+  'fch.todayDone': '今日复习已完成',
+  'fch.start': '开始今日复习',
+  'fch.count': '（{n} 张）',
+  'fch.nothingToday': '今日无可复习的卡',
+  'fch.rerunAll': '再练全部 {n} 张',
+  'fch.rerunNote': '额外练习 · 不更新连续天数 · 评分仍记录',
+  'fch.newPerDay': '每日新卡数',
+  'fch.save': '保存',
+  'fch.cancel': '取消',
+
+  // 课程页
+  'courses.notReady': '课程未就绪',
+  'courses.notReadyHint':
+    '课程内容来自 examples/<theme>/，需先运行 pnpm run build（含 sync:study）同步到 public/study/。',
+  'courses.frameTitle': '学习课程',
+  'courses.index': '课程目录',
+  'courses.tocCount': ' · {done}/{total}',
+  'courses.doneProgress': '课已学完 {done}/{total}',
+  'courses.markDone': '✓ 学完了',
+  'courses.undoDone': '已学完 · 撤销',
+  'courses.undoDoneTitle': '撤销这课的学完标记（打开课程页不计入学完，只有点了才算）',
+  'courses.goPractice': '去刷这课的题',
+
+  // 同步横幅
+  'sync.local': '在线演示模式：进度仅保存在此浏览器，不联网同步',
+  'sync.remoteInvalid': '服务器上的进度数据格式过旧，已忽略这份快照——进度暂以本浏览器为准，下次保存会自动修复',
+  'sync.retrying': '正在重试同步…',
+  'sync.error': '进度同步失败，已暂存本地。点击重试',
+  'sync.retry': '重试',
+  'sync.close': '关闭',
+
+  // 主题切换
+  'theme.light': '浅色模式',
+  'theme.dark': '深色模式',
+  'theme.system': '跟随系统',
+  'theme.title': '当前：{label}（点击切换）',
+  'theme.aria': '切换主题，当前{label}',
+
+  // 设置面板（学习偏好：拓展加练/答对自动跳题/每日新卡配额）
+  'settings.title': '学习偏好',
+  'settings.close': '关闭',
+  'settings.extLabel': '拓展加练',
+  'settings.extDesc': '默认关。开 = 显示拓展层（章节题）：练习页出现层筛选，首页出现拓展题块，用于弱考点补刷',
+  'settings.autoLabel': '答对自动跳题',
+  'settings.autoDesc': '默认开。答对后 3 秒自动进入下一题；关 = 停在原题方便读解析',
+  'settings.quotaLabel': '每日新卡配额',
+  'settings.quotaDesc': '闪卡每天最多引入的新卡数（0-50），与闪卡页设置同步',
+  'settings.quotaMinus': '减少配额',
+  'settings.quotaPlus': '增加配额',
+  'settings.syncHint': '偏好随进度跨设备同步',
+
+  // 设置面板·数据重置节（v0.25 票②：原首页「进度管理」折叠区四件收口至此，
+  // 全部只作用于当前主题；「按题集清」的细粒度重置留在练习页）
+  'settings.resetTitle': '数据重置（仅当前主题）',
+  'settings.resetPos': '清答题位置',
+  'settings.confirmResetPos': '把所有练习列表（按天/主题）的位置回到第 1 题？（不影响答题记录）',
+  'settings.resetWrong': '清错题记录',
+  'settings.confirmResetWrong': '清空当前主题的错题记录？（错题重练将没有题目，不可恢复）',
+  'settings.resetRead': '清看题记录',
+  'settings.confirmResetRead': '清空当前主题的看题进度？（不影响答题记录，不可恢复）',
+  'settings.resetSrs': '清闪卡进度',
+  'settings.confirmResetSrs': '清空当前主题的闪卡进度？所有卡回到新卡状态，连续天数归零，不可恢复。（不影响答题/看题进度）',
+  'settings.resetAllTheme': '清空本主题全部进度（含闪卡）',
+  'settings.confirmResetAllTheme':
+    '清空当前主题的全部进度（答题 + 错题 + 看题 + 闪卡）？此操作不可恢复，且会同步到所有设备。不影响其他主题。',
+
+  // 语言切换
+  'lang.aria': '切换语言',
+  'lang.title': '语言',
+};
+
+export type TKey = keyof typeof zh;

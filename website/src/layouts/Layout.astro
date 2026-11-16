@@ -1,0 +1,104 @@
+---
+import '../styles/site.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const base = import.meta.env.BASE_URL; // '/dsh-ai-study-kit/'
+const siteUrl = import.meta.env.SITE; // 'https://jerryjiao.github.io'
+const siteName = 'AI Study Kit';
+
+const {
+  title = 'AI Study Kit — 把学习教练装进 DSH：题目、闪卡、进度都在本机',
+  description = 'DeepSeek Harness（DSH）学习教练插件：五个学习教练技能 + 一个集成学习台。题目、闪卡、考点全景和进度都在你的项目目录里，数据不出本机。',
+} = Astro.props;
+
+const ogImage = `${siteUrl}${base}mark-1024.png`;
+const canonical = new URL(Astro.url.pathname, siteUrl).href;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" href={`${base}favicon.png`} />
+    <link rel="apple-touch-icon" href={`${base}mark-1024.png`} />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#F2F7FC"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#121A28"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+    <slot />
+    <script is:inline>
+      /* 全站唯一 JS：安装命令一键复制（零依赖，失败回落 execCommand） */
+      (function () {
+        function ok(b) {
+          b.classList.add('is-copied');
+          var s = b.querySelector('.copy-status');
+          if (s) s.textContent = '已复制';
+          clearTimeout(b._t);
+          b._t = setTimeout(function () {
+            b.classList.remove('is-copied');
+            if (s) s.textContent = '';
+          }, 1500);
+        }
+        function fb(t, b) {
+          var a = document.createElement('textarea');
+          a.value = t;
+          a.style.position = 'fixed';
+          a.style.opacity = '0';
+          document.body.appendChild(a);
+          a.select();
+          try {
+            document.execCommand('copy');
+            ok(b);
+          } catch (e) {}
+          document.body.removeChild(a);
+        }
+        document.querySelectorAll('[data-copy]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var t = b.getAttribute('data-copy');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(t).then(
+                function () {
+                  ok(b);
+                },
+                function () {
+                  fb(t, b);
+                }
+              );
+            } else {
+              fb(t, b);
+            }
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

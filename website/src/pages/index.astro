@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteHero from '../components/SiteHero.astro';
+import SiteProblem from '../components/SiteProblem.astro';
+import SiteFeatures from '../components/SiteFeatures.astro';
+import SiteQuickstart from '../components/SiteQuickstart.astro';
+import SiteShots from '../components/SiteShots.astro';
+import SiteSafety from '../components/SiteSafety.astro';
+import SiteArchitecture from '../components/SiteArchitecture.astro';
+import SiteFaq from '../components/SiteFaq.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+
+const title = 'AI Study Kit · 把学习教练装进 DSH';
+const description =
+  'DeepSeek Harness 学习插件：五个学习教练技能 + 一个学习台。题目、闪卡、考点全景和进度都读写你自己的项目目录。';
+---
+
+<Layout title={title} description={description}>
+  <SiteNav />
+  <main id="main">
+    <SiteHero />
+    <SiteProblem />
+    <SiteFeatures />
+    <SiteQuickstart />
+    <SiteShots />
+    <SiteSafety />
+    <SiteArchitecture />
+    <SiteFaq />
+  </main>
+  <SiteFooter />
+</Layout>

@@ -1,11 +1,12 @@
 {
   "name": "dsh-ai-study-kit",
-  "version": "0.1.0",
-  "description": "AI 学习教练 for DeepSeek Harness：把 ai-study-kit 的五个学习教练 skill（路由、陪练、体检、错题串讲、播客）打包成 DSH 插件，并附带完整答题站快照 kit。",
+  "version": "0.2.0",
+  "description": "AI 学习教练 for DeepSeek Harness：五个学习教练 skill（路由、陪练、体检、错题串讲、播客）+ 集成进 DSH 的答题学习台（首页 / 答题 / 闪卡 / 全景）。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
+    "./client": "./lib/client.js",
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
@@ -35,21 +36,56 @@
   ],
   "license": "MIT",
   "author": "dsh-ai-study-kit contributors",
-  "homepage": "https://github.com/jerryjiao/dsh-ai-study-kit",
+  "homepage": "https://jerryjiao.github.io/dsh-ai-study-kit/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jerryjiao/dsh-ai-study-kit.git"
   },
   "engines": {
-    "node": ">=20",
+    "node": "^22.19.0 || >=24.0.0",
     "dsh": ">=0.2.1-rc.5 <0.3.0"
   },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
     }
   },
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "build": "node scripts/build.mjs",
+    "build:client": "node scripts/build.mjs --client-only",
+    "test": "node --test test/*.test.mjs",
+    "dev:install": "node scripts/dev-install.mjs",
+    "screenshots": "node scripts/screenshots/capture.mjs",
+    "website:dev": "npm --prefix website run dev",
+    "website:build": "npm --prefix website run build"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.28.2",
+    "lucide-react": "^1.23.0",
+    "playwright": "^1.62.1",
+    "postcss": "^8.4.47",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.0",
+    "tailwindcss": "^3.4.13"
   }
 }

@@ -8,6 +8,32 @@
 
 （暂无——下一版攒票中。）
 
+## [0.2.0] — 2026-11-16
+
+主题：**学习台搬进 DSH。** 把 `ai-study-kit` 的答题站四页（首页 / 答题 / 闪卡 / 全景）做成 DSH 插件面板：`main` 面板 + 侧栏 `sidebar.panellist` 图标、顶部二级 tab、中英双语；页面直读学习项目根目录 `examples/<主题>/` 源 JSON（不走构建产物），进度经读-合并-写 + tmp+rename 原子写回 `progress.json`。五个技能命令与随包 `kit/` 快照保持不变。官网 <https://jerryjiao.github.io/dsh-ai-study-kit/> 同版上线。
+
+### Added
+
+- **学习台面板（ADR 0001）**：注册 `main` 面板与 `sidebar.panellist` 图标（list id 与面板 key 同名），不注册 `conversation.view`——全局学习进度不属于单个会话，空会话也要有入口。
+- **四页 UI + 顶部二级 tab**：首页（统计 / 继续上次 / 错题重练 / 随机 10 题 / 按主题闯关）、答题（单选 / 多选 / 判断，当场判分）、闪卡（间隔重复排队，翻面评分）、全景（四态着色 + 下一站推荐）。中英双语（en / zh），右上角切换并记住选择。
+- **直读 examples 源 JSON（ADR 0002）**：`src/host/study/content.js` 直接从 `<项目根>/examples/<slug>/` 读 questions / flashcards / course-spec / theme-config，不读构建产物、不需要 sync 步骤，装完即用；路径校验拒绝逃出 `examples/`。
+- **progress.json 原子写回**：`src/host/study/progress.js` read-merge-write + tmp + rename；文件损坏 / 形状非法时拒写并返回 `EPROGRESS_CORRUPT`，不静默重置学习者数据。
+- **项目探测（ADR 0003）**：探测顺序 cwd → 上次记住的路径 → `~/study-kit` → 目录选择器；识别旧 `kit/apps/quiz-app/examples` 与 `kit/examples` 布局并提示迁移（只读识别，不自动搬）。
+- **免服务运行（ADR 0004）**：移除 `:8787` Hono 服务 / `pnpm dev` / pm2 依赖，页面与宿主经本机回环 RPC 通信；保留 `scan` / `test` / `build` / `check:alignment` 脚本。
+- **官网与截图（ADR 0005）**：Astro 多页官网（首页 / 文档 / 更新日志）+ 5 张真实 DSH 截图（虚构示例项目 + 临时 `DSH_HOME`，Playwright 1440×900 dpr2 全页 PNG）。
+- **测试**：`npm test` 22 项（21 通过 / 1 跳过），覆盖槽注册、四页渲染、双语资源、examples 读取、进度合并与损坏拒写。
+
+### 升级与存量影响
+
+- **新文件/新契约**：插件新增 `src/`（host + client）、`lib/client.js`（构建产物）、`docs/adr/0001–0005`、`website/`、`scripts/`。学习项目侧契约不变：`examples/<theme>/` + `progress.json` + `study/`。
+- **老项目缺了会怎样**：只装插件、不建学习项目时学习台显示空态并引导选目录，五个技能照常可用；旧 `kit/apps/quiz-app` 布局可识别，不迁移、不写回。
+- **怎么补**：按首页空态指引进目录选择器，或把已有示例拷成 `<项目根>/examples/<theme>/` 再建 `progress.json`；`dsh plugin --profile <名字> update` 升级插件本体即可。
+- **是否破坏性**：非破坏。技能注册、`kit/` 快照、`references/` 均未动；`progress.json` 格式与上游一致。
+
+---
+
+以下为随包携带的上游 **ai-study-kit** 版本记录（`kit/` 快照版本见 `kit/kit-version.json`，快照原样搬运、不随插件版本号递增）。
+
 ## [0.28.0] — 2026-10-14
 
 主题：**聊天内复习闭环——错因记忆与隔期复测（spec #131，四票 #132-#135）。** 接 v0.26「看见+轻」与 v0.27 自适应排期器：进度可见、计划不再制造债务之后，剩下「这次学过」与「过几天仍然会」之间的缺口。本版让教练在后续会话接住上次的具体错因，并用少量有依据的问题重新验证——聊天学习路径的证据链（写→回流→消费）补上跨会话的一环。

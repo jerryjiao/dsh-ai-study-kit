@@ -1,0 +1,116 @@
+---
+import Icon from './Icon.astro';
+import { STEPS } from '../site-data';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<section class="section quickstart" id="quickstart">
+  <div class="container">
+    <div class="section-head">
+      <p class="kicker">5 分钟上手</p>
+      <h2 class="section-title">三步，从安装到第一道题</h2>
+      <p class="section-sub">
+        不用起服务、不用配端口。装插件、让教练建一个学习项目，然后打开侧栏的学习台。
+      </p>
+    </div>
+
+    <ol class="step-list">
+      {STEPS.map((step) => (
+        <li class="step">
+          <span class="step-num">{step.num}</span>
+          <div class="step-body">
+            <h3 class="step-title">{step.title}</h3>
+            <p class="step-text">{step.body}</p>
+            {step.code && (
+              <p class="step-cmd">
+                <Icon name="terminal" size={16} />
+                <code class="inline-cmd">{step.code}</code>
+              </p>
+            )}
+            {step.shot && (
+              <figure class="shot step-shot">
+                <div class="shot-frame">
+                  <img
+                    src={`${base}screenshots/${step.shot}.png`}
+                    alt={step.alt}
+                    loading="lazy"
+                    decoding="async"
+                    width="1440"
+                    height="900"
+                  />
+                </div>
+                <figcaption>{step.caption}</figcaption>
+              </figure>
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .step-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 2px solid var(--line);
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 24px;
+    padding-block: 32px;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .step-num {
+    color: var(--fg-faint);
+    font-family: var(--font-mono);
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .step-body {
+    max-width: 720px;
+  }
+
+  .step-title {
+    margin-bottom: 6px;
+    font-size: 1.18rem;
+    font-weight: 800;
+  }
+
+  .step-text {
+    color: var(--fg-muted);
+    max-width: 68ch;
+  }
+
+  .step-cmd {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    color: var(--fg-muted);
+  }
+
+  .step-shot {
+    margin-top: 20px;
+    max-width: 560px;
+  }
+
+  @media (max-width: 899px) {
+    .step {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      padding-block: 24px;
+    }
+
+    .step-num {
+      font-size: 1.1rem;
+    }
+  }
+</style>

@@ -1,0 +1,38 @@
+---
+import Icon from './Icon.astro';
+import { SAFETY } from '../site-data';
+---
+
+<section class="section safety" id="safety">
+  <div class="container">
+    <div class="section-head">
+      <p class="kicker">安全与隐私</p>
+      <h2 class="section-title">你的学习数据，一直是你自己的文件</h2>
+      <p class="section-sub">
+        插件没有账号系统、没有服务端数据库。它做的事只有一件：读写你选定的那个学习项目目录。
+      </p>
+    </div>
+
+    <div class="grid-4">
+      {SAFETY.map((item) => (
+        <article class="card">
+          <span class="icon-badge icon-badge-green">
+            <Icon name={item.icon} size={20} />
+          </span>
+          <h3 class="card-title">{item.title}</h3>
+          <p class="card-body">{item.body}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .card {
+    padding: 22px;
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+</style>

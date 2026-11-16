@@ -1,0 +1,62 @@
+---
+import Icon from './Icon.astro';
+import { PROBLEMS } from '../site-data';
+---
+
+<section class="section problem" id="why">
+  <div class="container">
+    <div class="section-head">
+      <p class="kicker">它解决什么</p>
+      <h2 class="section-title">学习卡住的地方，不是不够努力</h2>
+      <p class="section-sub">
+        三件最常见的事：学了记不住、内容跟练习对不上、换个工具进度就没了。学习台和五个技能就是对着这三件事做的。
+      </p>
+    </div>
+
+    <div class="grid-3">
+      {PROBLEMS.map((item, i) => (
+        <article class="problem-card">
+          <div class="problem-top">
+            <span class="icon-badge icon-badge-green">
+              <Icon name={item.icon} size={20} />
+            </span>
+            <span class="problem-num">0{i + 1}</span>
+          </div>
+          <h3 class="card-title">{item.title}</h3>
+          <p class="card-body">{item.body}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .problem-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 24px;
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .problem-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .problem-top .icon-badge {
+    margin-bottom: 0;
+  }
+
+  .problem-num {
+    color: var(--fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+</style>

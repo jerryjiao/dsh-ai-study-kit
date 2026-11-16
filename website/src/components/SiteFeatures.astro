@@ -1,0 +1,149 @@
+---
+import Icon from './Icon.astro';
+import { CONSOLE_PAGES, SKILLS } from '../site-data';
+---
+
+<section class="section features" id="capabilities">
+  <div class="container">
+    <div class="section-head">
+      <p class="kicker">它做什么</p>
+      <h2 class="section-title">一个学习台，五个随叫随到的教练</h2>
+      <p class="section-sub">
+        学习台负责看和练：进度、题目、闪卡、考点全景。技能负责在会话里带你走：下一步做什么、哪里没学透、哪里该回头补。
+      </p>
+    </div>
+
+    <h3 class="group-title">学习台 · 四个页面</h3>
+    <div class="console-grid">
+      {CONSOLE_PAGES.map((page) => (
+        <article class="console-card">
+          <span class="icon-badge icon-badge-blue">
+            <Icon name={page.icon} size={20} />
+          </span>
+          <h4 class="console-name">{page.name}</h4>
+          <p class="card-body">{page.body}</p>
+        </article>
+      ))}
+    </div>
+
+    <h3 class="group-title group-title-spaced">五个技能 · 会话里直接敲</h3>
+    <ul class="skill-list">
+      {SKILLS.map((skill) => (
+        <li class="skill-row">
+          <code class="skill-cmd">{skill.cmd}</code>
+          <div class="skill-text">
+            <h4 class="skill-name">{skill.name}</h4>
+            <p class="card-body">{skill.body}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .group-title {
+    margin-bottom: 18px;
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .group-title-spaced {
+    margin-top: 44px;
+  }
+
+  .console-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .console-card {
+    padding: 22px 20px;
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .console-card .icon-badge {
+    margin-bottom: 14px;
+  }
+
+  .console-name {
+    margin-bottom: 6px;
+    font-size: 1.02rem;
+    font-weight: 700;
+  }
+
+  .skill-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+
+  .skill-row {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 20px;
+    align-items: baseline;
+    padding: 18px 22px;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .skill-row:last-child {
+    border-bottom: 0;
+  }
+
+  .skill-cmd {
+    display: inline-block;
+    padding: 5px 10px;
+    border: 2px solid var(--line-strong);
+    border-radius: 9px;
+    background: var(--surface-2);
+    color: var(--fg);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .skill-name {
+    margin-bottom: 2px;
+    font-size: 0.98rem;
+    font-weight: 700;
+  }
+
+  @media (max-width: 1023px) {
+    .console-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 899px) {
+    .skill-row {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 16px 18px;
+    }
+
+    .skill-cmd {
+      justify-self: start;
+    }
+  }
+
+  @media (max-width: 599px) {
+    .console-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

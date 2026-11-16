@@ -1,0 +1,231 @@
+---
+import Icon from './Icon.astro';
+import {
+  CONSOLE_PAGES,
+  INSTALL_CMD,
+  PREREQ,
+  SKILLS,
+  VERSION,
+  LICENSE,
+} from '../site-data';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<section class="hero" id="top">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <p class="kicker">DeepSeek Harness 学习插件</p>
+      <h1 class="hero-title">
+        把<span class="hero-accent">学习教练</span><br />装进 DSH
+      </h1>
+      <p class="hero-sub">
+        五个学习教练技能 + 一个学习台。题目、闪卡、考点全景和进度，全在你自己的项目目录里。
+      </p>
+
+      <div class="install" id="install">
+        <div class="codeblock">
+          <div class="codeblock-bar">
+            <span class="codeblock-lang">
+              <Icon name="terminal" size={16} /> 终端
+            </span>
+            <button
+              class="copy-btn"
+              type="button"
+              data-copy={INSTALL_CMD}
+              aria-label="复制安装命令"
+            >
+              <Icon name="copy" size={16} class="icon-copy" />
+              <Icon name="check" size={16} class="icon-check" />
+              <span class="copy-status visually-hidden" aria-live="polite"
+              ></span>
+            </button>
+          </div>
+          <div class="codeblock-body">
+            <div class="cmd"><span class="prompt">$</span> {INSTALL_CMD}</div>
+          </div>
+        </div>
+        <p class="note">{PREREQ}</p>
+      </div>
+
+      <div class="hero-links">
+        <a class="btn btn-primary" href="#quickstart">
+          5 分钟上手 <Icon name="arrow-right" size={16} />
+        </a>
+        <a class="btn btn-ghost" href={`${base}docs/`}>
+          <Icon name="book-open" size={16} /> 安装与用法文档
+        </a>
+      </div>
+
+      <p class="hero-meta">
+        v{VERSION} · {LICENSE} 许可 · 无遥测 · 无独立服务器
+      </p>
+    </div>
+
+    <aside class="hero-panel" aria-label="装好后的样子">
+      <p class="panel-label">装好后你会看到</p>
+
+      <div class="panel-group">
+        <p class="panel-caption">侧栏 · 学习台</p>
+        <ul class="chip-list">
+          {CONSOLE_PAGES.map((page) => (
+            <li class="chip">
+              <Icon name={page.icon} size={16} /> {page.name}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="panel-group">
+        <p class="panel-caption">会话 · 五个命令</p>
+        <ul class="chip-list chip-list-mono">
+          {SKILLS.map((skill) => (
+            <li class="chip chip-mono">{skill.cmd}</li>
+          ))}
+        </ul>
+      </div>
+
+      <p class="panel-foot">
+        所有页面都读写你选定的学习项目；换项目就是换一个目录。
+      </p>
+    </aside>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-block: 72px 64px;
+    background: var(--bg);
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 56px;
+    align-items: start;
+  }
+
+  .hero-title {
+    font-size: clamp(2.6rem, 6vw, 4rem);
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+    margin-bottom: 20px;
+  }
+
+  .hero-accent {
+    color: var(--green-deep);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .hero-accent {
+      color: var(--green);
+    }
+  }
+
+  .hero-sub {
+    max-width: 34ch;
+    margin-bottom: 28px;
+    color: var(--fg-muted);
+    font-size: 1.08rem;
+    line-height: 1.7;
+  }
+
+  .install {
+    max-width: 520px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .hero-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .hero-meta {
+    margin-top: 28px;
+    color: var(--fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+
+  .hero-panel {
+    border: 2px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    padding: 24px;
+  }
+
+  .panel-label {
+    color: var(--fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+  }
+
+  .panel-group {
+    margin-top: 18px;
+  }
+
+  .panel-caption {
+    margin-bottom: 10px;
+    color: var(--fg-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-2);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .chip-mono {
+    border-color: var(--line);
+    background: var(--surface);
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+
+  .panel-foot {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 2px solid var(--line);
+    color: var(--fg-muted);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 899px) {
+    .hero {
+      padding-block: 40px 44px;
+    }
+
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+
+    .hero-title {
+      font-size: clamp(2.3rem, 9vw, 3rem);
+    }
+  }
+</style>

@@ -1,0 +1,95 @@
+---
+import Icon from './Icon.astro';
+import { FAQS } from '../site-data';
+---
+
+<section class="section faq" id="faq">
+  <div class="container faq-wrap">
+    <div class="section-head faq-head">
+      <p class="kicker">常见问题</p>
+      <h2 class="section-title">你可能想先问的四件事</h2>
+    </div>
+
+    <div class="faq-list">
+      {FAQS.map((item) => (
+        <details class="faq-item">
+          <summary>
+            <span class="faq-q">{item.q}</span>
+            <span class="faq-chev"><Icon name="chevron-down" size={18} /></span>
+          </summary>
+          <div class="faq-answer">
+            <p>{item.a}</p>
+          </div>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    gap: 48px;
+    align-items: start;
+  }
+
+  .faq-head {
+    margin-bottom: 0;
+  }
+
+  .faq-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .faq-item {
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .faq-item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.98rem;
+  }
+
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-chev {
+    display: inline-flex;
+    flex: 0 0 auto;
+    color: var(--fg-faint);
+    transition: transform 0.15s var(--ease);
+  }
+
+  .faq-item[open] .faq-chev {
+    transform: rotate(180deg);
+  }
+
+  .faq-answer {
+    padding: 0 20px 20px;
+  }
+
+  .faq-answer p {
+    color: var(--fg-muted);
+    font-size: 0.94rem;
+    max-width: 72ch;
+  }
+
+  @media (max-width: 899px) {
+    .faq-wrap {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+</style>

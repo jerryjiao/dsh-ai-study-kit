@@ -1,0 +1,497 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SiteNav from '../../components/SiteNav.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import Icon from '../../components/Icon.astro';
+import { INSTALL_CMD, PREREQ, VERSION } from '../../site-data';
+
+const base = import.meta.env.BASE_URL;
+
+const toc = [
+  { id: 'install', label: '安装与升级' },
+  { id: 'structure', label: '项目结构' },
+  { id: 'open', label: '打开学习台' },
+  { id: 'migrate', label: '旧布局迁移' },
+  { id: 'skills', label: '五个技能怎么用' },
+  { id: 'data', label: '数据与备份' },
+  { id: 'privacy', label: '隐私' },
+  { id: 'troubleshooting', label: '故障排查' },
+];
+
+const tree = `my-study/
+├─ examples/
+│  └─ git-basics/
+│     ├─ questions.json
+│     ├─ flashcards.json
+│     ├─ plan.json
+│     └─ theme-config.json
+├─ progress.json
+└─ study/
+   └─ records/`;
+---
+
+<Layout
+  title="文档 · AI Study Kit"
+  description="AI Study Kit 的安装、项目结构、学习台用法、旧布局迁移、五个技能、数据备份与故障排查。"
+>
+  <SiteNav />
+  <main id="main" class="docs-main">
+    <div class="container docs-wrap">
+      <aside class="docs-aside">
+        <p class="docs-aside-label">文档 · v{VERSION}</p>
+        <nav class="docs-toc" aria-label="本页目录">
+          {toc.map((item) => (
+            <a href={`#${item.id}`}>{item.label}</a>
+          ))}
+        </nav>
+        <a class="docs-back" href={base}>
+          <Icon name="arrow-right" size={16} /> 返回首页
+        </a>
+      </aside>
+
+      <article class="prose">
+        <header class="docs-head">
+          <p class="kicker">文档</p>
+          <h1>安装、结构与日常用法</h1>
+          <p class="docs-lead">
+            这一页覆盖从装插件到日常学习的完整路径：项目怎么摆、学习台怎么打开、旧目录怎么迁、五个技能各管什么、数据在哪里。
+          </p>
+        </header>
+
+        <section id="install">
+          <h2>安装与升级</h2>
+          <p>
+            插件要求 DSH ≥ 0.2.1-rc.5、Node 22.19+。装之前确认宿主版本，装完需要重启宿主。
+          </p>
+          <CodeBlock code={INSTALL_CMD} label="bash" />
+          <p class="docs-note">{PREREQ}</p>
+
+          <h3>装到哪个 profile</h3>
+          <p>
+            DSH 可以有多个 profile，插件装进哪个 profile，学习台就出现在哪个 profile 的侧栏。<code class="inline-cmd">dsh plugin</code>
+            强制要求 <code class="inline-cmd">--profile</code>，把它放在 <code class="inline-cmd">plugin</code> 和
+            <code class="inline-cmd">add</code> 之间；下面以 GUI 常用的 <code class="inline-cmd">web</code> 为例，换成你的 profile 名即可：
+          </p>
+          <CodeBlock code={'dsh plugin --profile web add dsh-ai-study-kit'} label="bash" />
+          <p>
+            装完在插件管理里确认状态是 active，五项技能（ask-coach / study-coach / study-doctor / study-recap / study-podcast）会一起注册。
+          </p>
+
+          <h3>从 GitHub 或本地目录安装</h3>
+          <p>
+            也可以直接从仓库装，或指向本机克隆目录。适合跟进未发版的改动：
+          </p>
+          <CodeBlock
+            code={'dsh plugin --profile web add github:jerryjiao/dsh-ai-study-kit\ndsh plugin --profile web add <本地克隆目录>'}
+            label="bash"
+          />
+
+          <h3>升级</h3>
+          <p>
+            没有单独的 update 子命令：重新执行一次安装命令即可，必要时在包名后加版本号锁定版本，然后重启宿主。升级插件不会动你的学习项目。
+          </p>
+        </section>
+
+        <section id="structure">
+          <h2>项目结构</h2>
+          <p>
+            学习项目是一个普通目录，只要三样东西：<code class="inline-cmd">examples/</code>、
+            <code class="inline-cmd">progress.json</code>、<code class="inline-cmd">study/</code>。插件不要求你在某个固定位置建它。
+          </p>
+          <CodeBlock code={tree} label="目录结构" copy={false} />
+
+          <h3>examples/&lt;theme&gt;/ 里的文件</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>文件</th><th>作用</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>questions.json</code></td>
+                  <td>题目、选项、正确答案与解析；答题页按题目 id 判分。</td>
+                </tr>
+                <tr>
+                  <td><code>flashcards.json</code></td>
+                  <td>闪卡正反面；间隔重复的排期记在 progress.json，不写回这里。</td>
+                </tr>
+                <tr>
+                  <td><code>plan.json</code></td>
+                  <td>学习计划：单元顺序、目标与 deadline，首页和教练都读它。</td>
+                </tr>
+                <tr>
+                  <td><code>theme-config.json</code></td>
+                  <td>主题名称、显示配置等元信息。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <code class="inline-cmd">MISSION.md</code> 与 <code class="inline-cmd">lessons/</code> 可选：有的话会出现在学习台和陪练里，没有也不影响答题和闪卡。
+          </p>
+
+          <h3>项目根不等于插件自带的 kit/</h3>
+          <p>
+            插件安装目录里的 <code class="inline-cmd">kit/</code> 是技能读取的快照与参考资料，不是你的学习项目。别把
+            <code class="inline-cmd">progress.json</code> 写进去，也别在里面改题目——升级插件时它会跟着包一起更新。你的项目放在任意目录，插件只读写你选中的那一个。
+          </p>
+        </section>
+
+        <section id="open">
+          <h2>打开学习台</h2>
+          <ol class="doc-list">
+            <li>重启宿主后，侧栏出现「学习台」图标，点开即是首页。</li>
+            <li>面板右上角有项目下拉，可以填路径或从最近用过的项目里选。</li>
+            <li>项目下拉指向哪个目录，页面就读写哪个目录；换项目就是换一个路径。</li>
+          </ol>
+          <p>没手动选过项目时，插件按这个顺序找：</p>
+          <ol class="doc-list">
+            <li>上次用的项目；</li>
+            <li>当前启动目录（在哪个目录启动 DSH，就试哪个目录）；</li>
+            <li><code class="inline-cmd">~/study-kit</code>。</li>
+          </ol>
+          <p>
+            三个都没命中时，面板会提示你选目录。选过之后会记住，下次直接用。
+          </p>
+        </section>
+
+        <section id="migrate">
+          <h2>旧布局迁移</h2>
+          <p>
+            旧版把内容放在 <code class="inline-cmd">kit/apps/quiz-app/examples/</code> 这类目录里。插件会识别
+            <code class="inline-cmd">kit/apps/quiz-app</code>、<code class="inline-cmd">kit</code>、
+            <code class="inline-cmd">apps/quiz-app</code> 这几种旧结构，并提示你迁移，不会直接改动旧目录。
+          </p>
+          <p>迁移按四步走，每一步都可停下：</p>
+          <ol class="doc-list">
+            <li>备份整个旧目录（复制一份，或先提交到你自己的 git）。</li>
+            <li>把 <code class="inline-cmd">examples/&lt;theme&gt;/</code> 与 <code class="inline-cmd">progress.json</code> 复制到新项目根。</li>
+            <li>校验：题目与答案条数对得上、已答记录还在、学习台能打开同一套题。</li>
+            <li>确认无误后，才删除旧目录。</li>
+          </ol>
+          <p>
+            迁移不改题目 id，已答记录和闪卡排期都能继续用。拿不准就先只备份、不删除——旧目录留着不影响新项目。
+          </p>
+        </section>
+
+        <section id="skills">
+          <h2>五个技能怎么用</h2>
+          <p>
+            技能都在会话里调用：敲斜杠命令，或者直接用自然语言说你要做什么。区别只是前者更明确，后者更随意。
+          </p>
+
+          <h3><code class="inline-cmd">/ask-coach</code> 学习教练（主入口）</h3>
+          <p>
+            不知道下一步做什么时找它。它会先扫一遍进度、错题、到期闪卡和考期，报一份学习状态快照，再给出现在最该做的一件事和理由，最后带你执行。
+          </p>
+          <CodeBlock code={'/ask-coach 我要学 git'} label="会话" />
+
+          <h3><code class="inline-cmd">/study-coach</code> 陪练</h3>
+          <p>
+            坐下就学：开场报今天最该练什么，一段一段讲，讲完当场考；考不过就退回去补，不往下赶。
+          </p>
+          <CodeBlock code={'/study-coach 继续学习'} label="会话" />
+
+          <h3><code class="inline-cmd">/study-doctor</code> 体检</h3>
+          <p>
+            把题库、内容对齐、环境配置一起查一遍。有红项会按修复顺序列出来，告诉你先修哪个、为什么。
+          </p>
+          <CodeBlock code={'/study-doctor 体检'} label="会话" />
+
+          <h3><code class="inline-cmd">/study-recap</code> 错题串讲</h3>
+          <p>
+            把错题从「知道答案」讲到「知道为什么错」，串完交回给你重做。错题攒到三题以上时，教练通常会主动建议做一次。
+          </p>
+          <CodeBlock code={'/study-recap 错题串讲'} label="会话" />
+
+          <h3><code class="inline-cmd">/study-podcast</code> 播客</h3>
+          <p>
+            把没掌握的课或错题串讲合成双人播客，通勤路上听。生成播客要调用模型，这一步需要网络和你的模型配置。
+          </p>
+          <CodeBlock code={'/study-podcast 通勤听'} label="会话" />
+
+          <p class="docs-note">
+            学习者只需要这五个命令。像装依赖、跑构建、复制文件这类工具链操作由技能在内部完成，不需要你记。
+          </p>
+        </section>
+
+        <section id="data">
+          <h2>数据与备份</h2>
+          <p>
+            <code class="inline-cmd">progress.json</code> 是纯文本 JSON，按题目 id 记录学习状态。主要字段：
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>字段</th><th>内容</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>answers</code></td><td>每道题的作答记录：选了哪些、是否答对、作答时间。</td></tr>
+                <tr><td><code>srs</code></td><td>闪卡复习排期：每张卡的下次到期时间与评级历史。</td></tr>
+                <tr><td><code>read</code></td><td>已读课程或章节的记录。</td></tr>
+                <tr><td><code>settings</code></td><td>偏好：每日新卡上限、自动前进、界面语言等。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            还有少量元信息，例如上次使用的主题。写入采用「读—合并—写临时文件—重命名」，写到一半中断不会留下半个文件；文件损坏时插件会拒绝覆盖并报错，不会悄悄清空。
+          </p>
+
+          <h3>备份</h3>
+          <p>
+            拷走整个项目根即可，最少只要 <code class="inline-cmd">examples/</code> 和
+            <code class="inline-cmd">progress.json</code>。<code class="inline-cmd">study/</code>
+            里是学习记录，想留也一起拷。把项目根放进你自己的 git 也可以；进度是运行数据，按需 ignore。
+          </p>
+
+          <h3>换机器</h3>
+          <p>
+            在新机器装插件、拷入项目根、打开学习台选中目录，进度就回来了。没有要登录的账号，也没有要恢复的云端数据。
+          </p>
+        </section>
+
+        <section id="privacy">
+          <h2>隐私</h2>
+          <ul class="doc-list">
+            <li>学习台页面与插件宿主只在本机回环上通信，不监听局域网或公网。</li>
+            <li>没有账号、没有遥测、没有云同步；插件不向任何服务端上传你的学习数据。</li>
+            <li>只读写你选定的那个项目目录，不扫描其他目录，不碰你的笔记和别的仓库。</li>
+            <li>只有生成题目、产课、做播客这类需要模型的动作会走网络，用的是你自己配置的模型。</li>
+            <li>官网与文档里的截图全部来自虚构的示例项目，不含真实用户数据。</li>
+          </ul>
+        </section>
+
+        <section id="troubleshooting">
+          <h2>故障排查</h2>
+
+          <h3>侧栏没有学习台图标</h3>
+          <p>
+            多半是装错了 profile，或者装完没重启宿主。先在插件管理里确认插件在你要用的那个 profile 下、状态是 active，再重启 DSH。
+          </p>
+
+          <h3>面板提示没找到项目</h3>
+          <p>
+            在右上角项目下拉里选一个目录，确认里面有 <code class="inline-cmd">examples/&lt;theme&gt;/</code>。探测顺序（上次项目 → 启动目录 →
+            <code class="inline-cmd">~/study-kit</code>）没命中时，手动选一次就会记住。
+          </p>
+
+          <h3>进度不保存</h3>
+          <p>
+            先看项目目录是不是只读、当前用户有没有写权限；再确认 <code class="inline-cmd">progress.json</code>
+            没有被别的程序占用。如果文件 JSON 损坏，宿主会报错并拒绝覆盖——修好它，或从备份恢复。
+          </p>
+
+          <h3>页面空白或提示构建产物缺失</h3>
+          <p>
+            从源码安装时插件包需要先构建：在插件仓库里跑 <code class="inline-cmd">npm run build</code>，再重新安装或重启宿主。
+          </p>
+        </section>
+
+        <footer class="docs-foot">
+          <p>
+            还有问题？到 <a href="https://github.com/jerryjiao/dsh-ai-study-kit/issues">仓库 Issues</a> 提问，或回首页看
+            <a href={`${base}#faq`}>常见问题</a>。
+          </p>
+        </footer>
+      </article>
+    </div>
+  </main>
+  <SiteFooter />
+</Layout>
+
+<style>
+  .docs-main {
+    padding-block: 48px 64px;
+  }
+
+  .docs-wrap {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 56px;
+    align-items: start;
+  }
+
+  .docs-aside {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px;
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .docs-aside-label {
+    color: var(--fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
+
+  .docs-toc {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .docs-toc a {
+    padding: 6px 8px;
+    border-radius: 8px;
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .docs-toc a:hover {
+    background: var(--surface-2);
+    color: var(--fg);
+  }
+
+  .docs-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 2px solid var(--line);
+    color: var(--fg-muted);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .docs-back svg {
+    transform: rotate(180deg);
+  }
+
+  .docs-head {
+    padding-bottom: 28px;
+    border-bottom: 2px solid var(--line);
+    margin-bottom: 8px;
+  }
+
+  .docs-head h1 {
+    font-size: clamp(1.9rem, 4vw, 2.5rem);
+    margin-bottom: 14px;
+  }
+
+  .docs-lead {
+    color: var(--fg-muted);
+    font-size: 1.05rem;
+    max-width: 68ch;
+  }
+
+  .prose section {
+    padding-top: 32px;
+  }
+
+  .prose h2 {
+    font-size: 1.45rem;
+    margin-bottom: 14px;
+    scroll-margin-top: 24px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .prose h3 {
+    font-size: 1.05rem;
+    margin-top: 26px;
+    margin-bottom: 8px;
+    scroll-margin-top: 24px;
+  }
+
+  .prose p {
+    color: var(--fg-muted);
+    margin-bottom: 12px;
+    max-width: 74ch;
+  }
+
+  .prose p code,
+  .prose li code {
+    font-size: 0.85em;
+  }
+
+  .prose > section :global(.codeblock) {
+    margin-block: 14px;
+  }
+
+  .prose a {
+    color: var(--blue-deep);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .prose a {
+      color: var(--blue);
+    }
+  }
+
+  .docs-note {
+    color: var(--fg-faint) !important;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+
+  .doc-list {
+    margin: 0 0 14px;
+    padding-left: 22px;
+    color: var(--fg-muted);
+    max-width: 74ch;
+  }
+
+  .doc-list li {
+    margin-bottom: 6px;
+  }
+
+  .table-wrap {
+    margin-block: 14px;
+  }
+
+  .docs-foot {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 2px solid var(--line);
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 899px) {
+    .docs-main {
+      padding-block: 24px 40px;
+    }
+
+    .docs-wrap {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .docs-aside {
+      position: static;
+      gap: 10px;
+      padding: 16px;
+    }
+
+    .docs-toc {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .docs-toc a {
+      padding: 4px 10px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-2);
+      font-size: 0.82rem;
+    }
+
+    .docs-back {
+      padding-top: 8px;
+    }
+  }
+</style>

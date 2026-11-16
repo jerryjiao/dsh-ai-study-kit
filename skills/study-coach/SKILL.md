@@ -15,4 +15,4 @@ disable-model-invocation: true
    - 开场照第 0 步编排优先级（#129）：**认领预告 > 抽背/复测同池（合计 ≤3 题）> 弱考点 > 新学**——快照「隔期复测」行（`retest.pick`）非空时，隔期复测就在同池位带实测证据自动带出（上次错因 + 口头四态 + 今天还没考过）；学习者跳过就跳过，零催办。
 3. **怎么教**：三段式/考法/判定标准以 [`../ask-coach/references/coach.md`](../ask-coach/references/coach.md) 为准（先读再用）。
 
-不是陪练的活（刷题 → 答题站、错题串讲 → /study-recap、体检 → /study-doctor、其他 → /ask-coach 路由），说一句该去哪。
+不是陪练的活（刷题 → 学习台「答题」视图走 F3、错题串讲 → /study-recap、体检 → /study-doctor、其他 → /ask-coach 路由），说一句该去哪。
