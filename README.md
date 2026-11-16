@@ -170,12 +170,6 @@ npm run screenshots   # 用 Playwright 重拍官网截图（需自备隔离的 D
 - [文档页](https://jerryjiao.github.io/dsh-ai-study-kit/docs/)：安装、学习项目结构、数据格式
 - [更新日志](CHANGELOG.md) / [网站版](https://jerryjiao.github.io/dsh-ai-study-kit/changelog/)
 - [详细设计与移植记录](./docs/DETAIL.md)：上游能力盘点、映射、差异台账、验证方法
-- 架构决策：
-  - [ADR 0001 学习台注册为 main 面板](./docs/adr/0001-学习台注册为-main-面板.md)
-  - [ADR 0002 直读 examples 源文件](./docs/adr/0002-直读examples源文件.md)
-  - [ADR 0003 学习项目轻结构](./docs/adr/0003-学习项目轻结构.md)
-  - [ADR 0004 切除服务层、保留内容流水线](./docs/adr/0004-切除服务层保留内容流水线.md)
-  - [ADR 0005 截图使用虚构数据与临时 HOME](./docs/adr/0005-截图使用虚构数据与临时HOME.md)
 
 ## 来源与致谢
 
