@@ -1,5 +1,5 @@
 ---
-import { getSite, type Lang } from '../site-data';
+import { getSite, shotPath, type Lang } from '../site-data';
 
 interface Props {
   lang?: Lang;
@@ -23,7 +23,7 @@ const base = import.meta.env.BASE_URL;
         <figure class:list={['shot', { 'shot-wide': i === 0 }]}>
           <div class="shot-frame">
             <img
-              src={`${base}screenshots/${shot.file}.png`}
+              src={shotPath(lang, base, shot.file)}
               alt={shot.alt}
               loading="lazy"
               decoding="async"

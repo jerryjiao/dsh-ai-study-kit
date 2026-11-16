@@ -10,7 +10,7 @@ export {
 
 import { getSite } from './site-content';
 
-export { getSite, langPath, alternatePath, type SiteContent } from './site-content';
+export { getSite, langPath, shotPath, alternatePath, type SiteContent } from './site-content';
 
 /** 中文前置条件（zh 页面直接引用；英文页面用 getSite('en').meta.prereq） */
 export const PREREQ = getSite('zh').meta.prereq;

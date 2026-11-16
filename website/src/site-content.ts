@@ -695,6 +695,11 @@ export function langPath(lang: Lang, base: string, path = ''): string {
   return lang === 'en' ? `${base}en/${path}` : `${base}${path}`;
 }
 
+/** 产品截图的地址：中文用中文界面图，英文用英文界面图（screenshots/en/ 下同名文件） */
+export function shotPath(lang: Lang, base: string, name: string): string {
+  return `${base}screenshots/${lang === 'en' ? 'en/' : ''}${name}.png`;
+}
+
 /** 当前页在另一种语言里的地址（语言切换用） */
 export function alternatePath(lang: Lang, pathname: string, base: string): string {
   const rest = pathname.startsWith(base) ? pathname.slice(base.length) : pathname.replace(/^\//, '');

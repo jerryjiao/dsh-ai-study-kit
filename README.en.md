@@ -16,7 +16,7 @@
   <a href="docs/adr/">ADRs</a>
 </p>
 
-![Study Desk home: answered, accuracy, wrong answers and read count on one screen](website/public/screenshots/home.png)
+![Study Desk home: answered, accuracy, wrong answers and read count on one screen](website/public/screenshots/en/home.png)
 
 ## What this is
 
@@ -83,7 +83,7 @@ my-study-project/                ← project root, location is up to you
 | Flashcards | Queued by due date; flip to see the answer, and after you rate "forgot / fuzzy / remembered" the next card's time is decided |
 | Panorama | Exam points are colored by four states — "mastered / learning / weak / untouched" — and the next-stop recommendation jumps straight there to fill the gap |
 
-![Practice page: graded on the spot, with an explanation](website/public/screenshots/practice.png)
+![Practice page: graded on the spot, with an explanation](website/public/screenshots/en/practice.png)
 
 A few implementation trade-offs:
 

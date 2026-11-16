@@ -9,6 +9,7 @@
 ### Added
 
 - **官网与 README 支持英文**：Astro 官网新增 `/en/`、`/en/docs/`、`/en/changelog/` 三页，中英页面顶部可互相切换（`hreflang` 与 `og:locale` 同步）；仓库新增 `README.en.md`，与中文 README 顶部互链。文案集中在 `website/src/site-content.ts`，中英两套数据驱动同一批组件。
+- **英文页面配英文界面截图**：新增 `website/public/screenshots/en/`（五张英文 UI 截图，虚构演示项目 `intro-en`）；中文页继续用中文界面截图。路径由 `shotPath(lang, base, name)` 决定，`scripts/screenshots/capture.mjs` 新增 `--lang zh|en` 可复现两套。
 
 ### 升级与存量影响
 
