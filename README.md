@@ -177,10 +177,6 @@ npm run screenshots   # 用 Playwright 重拍官网截图（需自备隔离的 D
   - [ADR 0004 切除服务层、保留内容流水线](./docs/adr/0004-切除服务层保留内容流水线.md)
   - [ADR 0005 截图使用虚构数据与临时 HOME](./docs/adr/0005-截图使用虚构数据与临时HOME.md)
 
-## 隐私
-
-仓库与插件不含任何个人信息：示例数据是虚构的（`dev-intro`），官网截图用虚构学习项目 + 临时 `DSH_HOME` 拍摄（[ADR 0005](./docs/adr/0005-截图使用虚构数据与临时HOME.md)）。插件运行时只用 `node:fs` / `node:path` / `node:url`，不收集数据、不写学习项目目录之外、不含密钥。
-
 ## 来源与致谢
 
 skill 正文、`kit/` 快照与 `references/` 来自开源项目 **ai-study-kit**（MIT），原样搬运、不改一行运行代码。移植到 DSH 的部分（bundle 清单、`lib/index.js`、学习台、测试、文档）同样以 MIT 发布。详见 [LICENSE](./LICENSE)。
