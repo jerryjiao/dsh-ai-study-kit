@@ -30,7 +30,8 @@
 ### 1. 安装
 
 ```bash
-dsh plugin --profile web add github:jerryjiao/dsh-ai-study-kit
+dsh plugin --profile web add \
+  github:jerryjiao/dsh-ai-study-kit
 ```
 
 `web` 换成你的 profile 名（`dsh plugin` 强制要求 `--profile`）。装完插件状态为 `active` 即成功：侧栏出现「学习台」图标，五个 `/study-*` 命令可用。
@@ -73,7 +74,7 @@ dsh plugin --profile web add github:jerryjiao/dsh-ai-study-kit
 
 ## 学习台
 
-| 页面 | 做什么 |
+| 页面（顶部 tab） | 做什么 |
 |------|--------|
 | 首页 | 已答 / 正确率 / 错题 / 已看一屏看完；继续上次、错题重练、随机 10 题、按主题闯关都在这里起步 |
 | 答题 | 单选、多选、判断题当场判分；错了给解析，多选题全对才算对 |
@@ -123,20 +124,20 @@ dsh plugin --profile web add github:jerryjiao/dsh-ai-study-kit
 
 ```
 dsh-study-kit/
-├── package.json          # DSH bundle 清单（dsh.bundle.patch、dsh.client）
+├── package.json          # bundle 清单（patch、client）
 ├── cordis.patch.yml      # 把本插件 insert 进 DSH
-├── lib/index.js          # Host 入口：注册 skills，挂载学习台服务
-├── lib/client.js         # 学习台浏览器端构建产物（由 src/client 打包，勿手改）
-├── src/host/             # Host 侧：项目探测、examples 读取、progress.json 读写
-├── src/client/           # 浏览器端：四页面、顶部 tab、i18n（en/zh）、状态管理
-├── skills/               # 五个 skill（SKILL.md + 参考资料）
-├── kit/                  # 答题站快照（含示例项目 examples/dev-intro，版本见 kit/kit-version.json）
-├── references/           # 契约 / 状态探测 / 语气参考
+├── lib/index.js          # Host 入口：注册 skills
+├── lib/client.js         # 学习台前端产物（勿手改）
+├── src/host/             # 项目探测、读 examples、写进度
+├── src/client/           # 四页、tab、i18n、状态管理
+├── skills/               # 五个 skill（含参考资料）
+├── kit/                  # 答题站快照 + 示例 dev-intro
+├── references/           # 契约 / 状态探测 / 语气
 ├── locale/               # en / zh 元数据
 ├── docs/adr/             # 架构决策 0001–0005
-├── scripts/              # build（host + client）、dev-install、screenshots
-├── website/              # Astro 官网（首页 / 文档 / 更新日志）
-├── test/                 # node:test：plugin.test.mjs + study-service.test.mjs
+├── scripts/              # build、dev-install、截图
+├── website/              # Astro 官网（三页）
+├── test/                 # node:test 两个测试文件
 ├── CHANGELOG.md
 └── LICENSE
 ```
