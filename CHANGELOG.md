@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+（暂无——下一版攒票中。）
+
+## [0.2.1] — 2026-11-16
+
+主题：**官网双语、文案纠偏。** 官网补齐英文版（`/en/`、`/en/docs/`、`/en/changelog/`）与英文界面截图，仓库补 `README.en.md`；同时修掉插件里「进度跨设备同步」这类与实现不符的文案，并补齐英文单数形态。插件功能、数据契约、`progress.json` 格式均未改动。官网 <https://jerryjiao.github.io/dsh-ai-study-kit/> 同步更新。
+
 ### Added
 
 - **官网与 README 支持英文**：Astro 官网新增 `/en/`、`/en/docs/`、`/en/changelog/` 三页，中英页面顶部可互相切换（`hreflang` 与 `og:locale` 同步）；仓库新增 `README.en.md`，与中文 README 顶部互链。文案集中在 `website/src/site-content.ts`，中英两套数据驱动同一批组件。

@@ -382,6 +382,17 @@ const ZH: SiteContent = {
     note: '本页从 0.2.0 起手工维护。更细的提交记录和更早的历史，以仓库的 CHANGELOG.md 与 git 历史为准。',
     releases: [
       {
+        version: '0.2.1',
+        date: '2026-11-16',
+        title: '官网双语、文案纠偏',
+        points: [
+          '官网新增英文版 /en/、/en/docs/、/en/changelog/，顶部可中英互切；仓库新增 README.en.md。',
+          '英文页面配英文界面截图，中文页面继续用中文界面截图。',
+          '删掉「进度跨设备同步」的不实文案：进度只存在本地项目里。',
+          '修正英文单数形态，全景页不再出现「1 wrong answers」；课程未就绪提示改为直读 examples/、无需构建。',
+        ],
+      },
+      {
         version: '0.2.0',
         date: '2026-11-16',
         title: '学习台搬进 DSH',
@@ -658,6 +669,17 @@ const EN: SiteContent = {
     leadAfter: '.',
     note: 'This page has been maintained by hand since 0.2.0. For the finer commit log and earlier history, the repository CHANGELOG.md and the git history are authoritative.',
     releases: [
+      {
+        version: '0.2.1',
+        date: '2026-11-16',
+        title: 'Bilingual site, honest copy',
+        points: [
+          'The website now ships English pages at /en/, /en/docs/, and /en/changelog/, switchable from the nav; the repo gains README.en.md.',
+          'English pages use English-UI screenshots; Chinese pages keep the Chinese ones.',
+          'Removed the false "progress syncs across devices" claim: progress stays in your local project.',
+          'Fixed English singular forms (no more "1 wrong answers"), and the course hint now says content is read straight from examples/ with no build step.',
+        ],
+      },
       {
         version: '0.2.0',
         date: '2026-11-16',

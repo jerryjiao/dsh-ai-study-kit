@@ -1,6 +1,6 @@
 {
   "name": "dsh-ai-study-kit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "AI 学习教练 for DeepSeek Harness：五个学习教练 skill（路由、陪练、体检、错题串讲、播客）+ 集成进 DSH 的答题学习台（首页 / 答题 / 闪卡 / 全景）。",
   "type": "module",
   "main": "lib/index.js",
