@@ -17,7 +17,7 @@ export const en: Record<TKey, string> = {
   'nav.backHome': 'Back to home',
 
   // Home
-  'home.tagline': 'Practice site · {total} questions · progress syncs across devices',
+  'home.tagline': 'Practice site · {total} questions · progress stays in your local project',
   'home.taglineLocal': 'Practice site · {total} questions · progress is saved in this browser',
   'home.heroTitle': 'Keep going — another level today',
   'home.statAnswered': 'Answered',
@@ -271,7 +271,7 @@ export const en: Record<TKey, string> = {
   // Courses
   'courses.notReady': 'Courses not ready',
   'courses.notReadyHint':
-    'Course content comes from examples/<theme>/ — run pnpm run build (includes sync:study) to sync it into public/study/.',
+    'Course content is read straight from examples/<theme>/ — drop it in the project and refresh; no build step.',
   'courses.frameTitle': 'Course site',
   'courses.index': 'Lesson index',
   'courses.tocCount': ' · {done}/{total}',
@@ -307,7 +307,7 @@ export const en: Record<TKey, string> = {
   'settings.quotaDesc': 'Max new flashcards introduced per day (0-50), synced with the flashcards page',
   'settings.quotaMinus': 'Decrease quota',
   'settings.quotaPlus': 'Increase quota',
-  'settings.syncHint': 'Preferences sync across devices with your progress',
+  'settings.syncHint': 'Preferences are saved with your progress in the project folder',
 
   // Settings sheet · data reset (v0.25 ticket 2: the four reset entries formerly in the home
   // "Progress management" section live here now; all scoped to the current theme only)
@@ -326,9 +326,20 @@ export const en: Record<TKey, string> = {
     'Clear the flashcard progress of the current theme? Every card returns to new and the streak resets to zero. This cannot be undone. (Answer/reading progress is not affected)',
   'settings.resetAllTheme': 'Clear ALL progress of this theme (incl. flashcards)',
   'settings.confirmResetAllTheme':
-    'Clear ALL progress of the current theme (answers + wrong + reading + flashcards)? This cannot be undone and will sync to all your devices. Other themes are not affected.',
+    'Clear ALL progress of the current theme (answers + wrong + reading + flashcards)? This cannot be undone. Other themes are not affected.',
 
   // Language toggle
   'lang.aria': 'Switch language',
   'lang.title': 'Language',
+};
+
+/** 英文单数形态：n === 1 时由 makeT 自动改用这里的句子（中文无复数，不需要对应表）。
+ *  key 必须已是 en 的 key；只在会显示数字的句子上登记，别整本词典铺开。 */
+export const enSingular: Partial<Record<TKey, string>> = {
+  'panorama.nextWhyWeak': '{n} wrong answer still unresolved',
+  'panorama.nextWhyWeakBlocks':
+    '{n} wrong answer still unresolved, holding back {m} downstream points ({names})',
+  'panorama.nextWhyBehind': '{n} day behind schedule (goal {date})',
+  'home.planDeadlineIn': '{n} day to deadline',
+  'home.planSlack': '{n} day ahead',
 };

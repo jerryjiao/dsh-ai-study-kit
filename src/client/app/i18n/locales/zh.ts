@@ -21,7 +21,7 @@ export const zh = {
 
   // 首页
   'home.heroTitle': '继续，今天也要过关',
-  'home.tagline': '学习练习站 · 共 {total} 题 · 进度自动跨设备同步',
+  'home.tagline': '学习练习站 · 共 {total} 题 · 进度只存在本地项目里',
   // 本地模式（无后端，如官网 demo）下的 tagline：与 sync.local 横幅一致，不宣称同步
   'home.taglineLocal': '学习练习站 · 共 {total} 题 · 进度保存在此浏览器',
   'home.statAnswered': '已答',
@@ -269,7 +269,7 @@ export const zh = {
   // 课程页
   'courses.notReady': '课程未就绪',
   'courses.notReadyHint':
-    '课程内容来自 examples/<theme>/，需先运行 pnpm run build（含 sync:study）同步到 public/study/。',
+    '课程内容直读 examples/<theme>/，放进项目里刷新即可，无需构建。',
   'courses.frameTitle': '学习课程',
   'courses.index': '课程目录',
   'courses.tocCount': ' · {done}/{total}',
@@ -305,7 +305,7 @@ export const zh = {
   'settings.quotaDesc': '闪卡每天最多引入的新卡数（0-50），与闪卡页设置同步',
   'settings.quotaMinus': '减少配额',
   'settings.quotaPlus': '增加配额',
-  'settings.syncHint': '偏好随进度跨设备同步',
+  'settings.syncHint': '偏好跟进度一起存在本地项目里',
 
   // 设置面板·数据重置节（v0.25 票②：原首页「进度管理」折叠区四件收口至此，
   // 全部只作用于当前主题；「按题集清」的细粒度重置留在练习页）
@@ -320,7 +320,7 @@ export const zh = {
   'settings.confirmResetSrs': '清空当前主题的闪卡进度？所有卡回到新卡状态，连续天数归零，不可恢复。（不影响答题/看题进度）',
   'settings.resetAllTheme': '清空本主题全部进度（含闪卡）',
   'settings.confirmResetAllTheme':
-    '清空当前主题的全部进度（答题 + 错题 + 看题 + 闪卡）？此操作不可恢复，且会同步到所有设备。不影响其他主题。',
+    '清空当前主题的全部进度（答题 + 错题 + 看题 + 闪卡）？此操作不可恢复。不影响其他主题。',
 
   // 语言切换
   'lang.aria': '切换语言',

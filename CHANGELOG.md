@@ -11,6 +11,13 @@
 - **官网与 README 支持英文**：Astro 官网新增 `/en/`、`/en/docs/`、`/en/changelog/` 三页，中英页面顶部可互相切换（`hreflang` 与 `og:locale` 同步）；仓库新增 `README.en.md`，与中文 README 顶部互链。文案集中在 `website/src/site-content.ts`，中英两套数据驱动同一批组件。
 - **英文页面配英文界面截图**：新增 `website/public/screenshots/en/`（五张英文 UI 截图，虚构演示项目 `intro-en`）；中文页继续用中文界面截图。路径由 `shotPath(lang, base, name)` 决定，`scripts/screenshots/capture.mjs` 新增 `--lang zh|en` 可复现两套。
 
+### Fixed
+
+- **「进度跨设备同步」是不实文案（中英同改）**：插件只把进度原子写回本地 `<项目根>/progress.json`，没有云端、没有账号。首页副标题与设置页提示从「进度自动跨设备同步」/「progress syncs across devices」改为「进度只存在本地项目里」/「progress stays in your local project」，重置确认里「且会同步到所有设备」一并删掉。
+- **英文单数形态**：`t()` 在 `n === 1` 时改用新增的 `enSingular` 表，全景页不再出现「1 wrong answers」（顺带 `1 day behind schedule` 一类）。
+- **课程未就绪提示与实现相反**：原来让用户跑 `pnpm run build`（含 `sync:study`），而学习台是直读 `examples/<theme>/`（ADR 0002）；改为「放进项目里刷新即可，无需构建」。
+- **重拍两套截图**：中英各五张全部重拍，画面里显示修正后的文案；英文演示数据 `intro-en` 只留一条错答案，用来验证单数（`1 wrong answer still unresolved`）。
+
 ### 升级与存量影响
 
 - **新文件/新契约**：官网新增 `website/src/pages/en/**`、`website/src/site-content.ts`、`website/src/components/SiteChangelog.astro`；仓库根新增 `README.en.md`。插件本体、面板、数据契约、`progress.json` 格式均未改动。

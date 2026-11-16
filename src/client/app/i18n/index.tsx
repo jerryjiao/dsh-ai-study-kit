@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { zh } from './locales/zh';
-import { en } from './locales/en';
+import { en, enSingular } from './locales/en';
 import { useProgress } from '../hooks/useProgress';
 import type { UiLang } from '../types';
 
@@ -28,8 +28,11 @@ export function normalizeLang(v: unknown): UiLang | null {
 
 function makeT(lang: UiLang): TFn {
   const dict = DICTS[lang] ?? DICTS.zh;
+  const singular = lang === 'en' ? enSingular : null;
   return (key, vars) => {
-    let s = dict[key] ?? zh[key] ?? String(key);
+    // 英文单数：n === 1 时优先用单数句，避免 "1 wrong answers" / "1 days"
+    const one = singular && Number(vars?.n) === 1 ? singular[key] : undefined;
+    let s = one ?? dict[key] ?? zh[key] ?? String(key);
     if (vars) {
       for (const [k, v] of Object.entries(vars)) {
         s = s.split(`{${k}}`).join(String(v));
